@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
 TARGET = numc
-SOURCE = src/numc.c
+SOURCE = src/*.c
 
 all: $(TARGET)
 

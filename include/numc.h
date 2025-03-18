@@ -14,4 +14,9 @@
         return 1;                \
     }
 
+#define _check_zero(value) \
+    if ((value) == 0) {    \
+        return NULL;       \
+    }
+
 #endif  // !NUMC_H

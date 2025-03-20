@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum { INT32, FLOAT64, DOUBLE } dtype_t;
+typedef enum { nc_int, nc_float, nc_double } dtype_t;
 
 typedef struct {
     void *data;
@@ -18,6 +18,9 @@ typedef struct {
 
 ndarray_t *nc_create(size_t *shape, int ndim, dtype_t dtype);
 void nc_free(ndarray_t **array);
+
 void nc_display(ndarray_t *array);
+void *nc_get(ndarray_t *array, size_t *indices);
+void nc_set(ndarray_t *array, size_t *indices, void *value);
 
 #endif  // !NDARRAY_H

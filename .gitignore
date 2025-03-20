@@ -1,3 +1,4 @@
 numc
 .cache
 compile_commands.json
+vgcore*

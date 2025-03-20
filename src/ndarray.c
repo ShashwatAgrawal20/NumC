@@ -8,11 +8,11 @@
 *******************************************************************************/
 static inline size_t _dtype_size(dtype_t dtype) {
     switch (dtype) {
-        case INT32:
+        case nc_int:
             return sizeof(int);
-        case FLOAT64:
+        case nc_float:
             return sizeof(float);
-        case DOUBLE:
+        case nc_double:
             return sizeof(double);
         default:
             fprintf(stderr, "Invalid dtype\n");
@@ -79,9 +79,50 @@ void nc_free(ndarray_t **array) {
     *array = NULL;
 }
 
+void nc_set(ndarray_t *array, size_t *indices, void *value) {
+    if (!array || !array->data) {
+        fprintf(stderr, "array doesn't exists\n");
+        return;
+    }
+    size_t offset = 0;
+    for (int i = 0; i < array->ndim; i++) {
+        if (indices[i] >= array->shape[i]) {
+            fprintf(stderr, "Index out of bounds: %zu (axis %d, shape %zu)\n",
+                    indices[i], i, array->shape[i]);
+            return;
+        }
+        printf("\t%zu, ", indices[i]);
+        offset += indices[i] * array->strides[i];
+    }
+    // These logs are meant to go but keeping these as of now for some debug
+    // purposes.
+    printf("writing on -> %zu\n", offset);
+    printf(
+        "nc_set: writing at offset %zu (total size: %zu | total elements: "
+        "%zu)\n",
+        offset, array->total_size * array->item_size, array->total_size);
+
+    memcpy((char *)array->data + offset, value, array->item_size);
+}
+
+void *nc_get(ndarray_t *array, size_t *indices) {
+    if (!array || !array->data) return NULL;
+    size_t offset = 0;
+    for (int i = 0; i < array->ndim; i++) {
+        if (indices[i] >= array->shape[i]) {
+            fprintf(stderr, "Index out of bounds: %zu (axis %d, shape %zu)\n",
+                    indices[i], i, array->shape[i]);
+            return NULL;
+        }
+        offset += indices[i] * array->strides[i];
+    }
+
+    return (char *)array->data + offset;
+}
+
 /*
- * We don't need this btw it's just for development purposes but idk might leave
- * this here.
+ * We don't need this btw it's just for development purposes but idk might
+ * leave this here.
  * */
 void nc_display(ndarray_t *array) {
     if (!array) {

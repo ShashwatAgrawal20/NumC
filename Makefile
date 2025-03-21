@@ -6,7 +6,7 @@ SOURCE = src/*.c
 all: $(TARGET)
 
 $(TARGET): $(SOURCE)
-		$(CC) $(CFLAGS) -o $@ $^
+		$(CC) $(CFLAGS) -o $@ $^ -lm
 
 run: $(TARGET)
 		./numc

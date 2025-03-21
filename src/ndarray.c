@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -15,8 +16,24 @@ static inline size_t _dtype_size(dtype_t dtype) {
         case nc_double:
             return sizeof(double);
         default:
-            fprintf(stderr, "Invalid dtype\n");
+            fprintf(stderr, "invalid dtype\n");
             return 0;
+    }
+}
+
+static inline void assign_value(void *ptr, double val, dtype_t dtype) {
+    switch (dtype) {
+        case nc_int:
+            *(int *)ptr = (int)val;
+            break;
+        case nc_float:
+            *(float *)ptr = (float)val;
+            break;
+        case nc_double:
+            *(double *)ptr = val;
+            break;
+        default:
+            fprintf(stderr, "invalid dtype\n");
     }
 }
 
@@ -25,7 +42,9 @@ static inline size_t _dtype_size(dtype_t dtype) {
 *******************************************************************************/
 ndarray_t *nc_create(size_t *shape, int ndim, dtype_t dtype) {
     if (ndim <= 0) {
-        fprintf(stderr, "can't initialize ndarray of dimention %d", ndim);
+        fprintf(stderr,
+                "nc_create error: can't initialize ndarray of dimention %d",
+                ndim);
         return NULL;
     }
     size_t dtype_size = _dtype_size(dtype);
@@ -81,14 +100,16 @@ void nc_free(ndarray_t **array) {
 
 void nc_set(ndarray_t *array, size_t *indices, void *value) {
     if (!array || !array->data) {
-        fprintf(stderr, "array doesn't exists\n");
+        fprintf(stderr, "nc_set error: array doesn't exists\n");
         return;
     }
     size_t offset = 0;
     for (int i = 0; i < array->ndim; i++) {
         if (indices[i] >= array->shape[i]) {
-            fprintf(stderr, "Index out of bounds: %zu (axis %d, shape %zu)\n",
-                    indices[i], i, array->shape[i]);
+            fprintf(
+                stderr,
+                "nc_set error: index out of bounds: %zu (axis %d, shape %zu)\n",
+                indices[i], i, array->shape[i]);
             return;
         }
         printf("\t%zu, ", indices[i]);
@@ -98,7 +119,8 @@ void nc_set(ndarray_t *array, size_t *indices, void *value) {
     // purposes.
     printf("writing on -> %zu\n", offset);
     printf(
-        "nc_set: writing at offset %zu (total size: %zu | total elements: "
+        "nc_set error: writing at offset %zu (total size: %zu | total "
+        "elements: "
         "%zu)\n",
         offset, array->total_size * array->item_size, array->total_size);
 
@@ -110,14 +132,45 @@ void *nc_get(ndarray_t *array, size_t *indices) {
     size_t offset = 0;
     for (int i = 0; i < array->ndim; i++) {
         if (indices[i] >= array->shape[i]) {
-            fprintf(stderr, "Index out of bounds: %zu (axis %d, shape %zu)\n",
-                    indices[i], i, array->shape[i]);
+            fprintf(
+                stderr,
+                "nc_get error: index out of bounds: %zu (axis %d, shape %zu)\n",
+                indices[i], i, array->shape[i]);
             return NULL;
         }
         offset += indices[i] * array->strides[i];
     }
 
     return (char *)array->data + offset;
+}
+
+ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
+    if (step == 0.0) {
+        fprintf(stderr, "nd_arange error: step cannot be zero.\n");
+        return NULL;
+    }
+
+    /*
+        TODO: I DON'T LIKE THIS CEIL SHIT CAUSE I'VE TO MANUALLY DO THAT LM SHIT
+        WHILE BUILDING AND PROBABLY WILL IMPLEMENT THIS WITH LOOPS AND STUFF
+        LATER.
+    */
+    size_t length = (size_t)ceil((stop - start) / step);
+    if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
+        length = 0;
+    }
+
+    size_t shape[1] = {length};
+    ndarray_t *array = nc_create(shape, 1, dtype);
+    _check_null_return(array);
+
+    for (size_t i = 0; i < length; ++i) {
+        void *element = array->data + i * array->item_size;
+        double value = start + i * step;
+
+        assign_value(element, value, dtype);
+    }
+    return array;
 }
 
 /*

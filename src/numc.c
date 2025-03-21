@@ -30,6 +30,30 @@ int main() {
         printf("nc_get failed: index out of bounds or invalid access.\n");
     }
 
+    // ARANGE INT
+    {
+        ndarray_t *fucking_trying_arange = nc_arange(0, 7000, 69, nc_int);
+        nc_display(fucking_trying_arange);
+        for (size_t i = 0; i < fucking_trying_arange->total_size; ++i) {
+            printf("%d ", ((int *)fucking_trying_arange->data)[i]);
+        }
+        printf("\n");
+        nc_free(&fucking_trying_arange);
+    }
+
+    // ARANGE FLOAT
+    {
+        ndarray_t *fucking_trying_arange_float =
+            nc_arange(0, 7000, 69.69, nc_float);
+        nc_display(fucking_trying_arange_float);
+        for (size_t i = 0; i < fucking_trying_arange_float->total_size; ++i) {
+            printf("%f ", ((float *)fucking_trying_arange_float->data)[i]);
+        }
+        printf("\n");
+
+        nc_free(&fucking_trying_arange_float);
+    }
+
     for (int i = 0; i < NUM_OF_ARRAYS; ++i) {
         nc_free(&arrays[i]);
     }

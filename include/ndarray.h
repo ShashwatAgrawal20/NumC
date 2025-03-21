@@ -22,5 +22,6 @@ void nc_free(ndarray_t **array);
 void nc_display(ndarray_t *array);
 void *nc_get(ndarray_t *array, size_t *indices);
 void nc_set(ndarray_t *array, size_t *indices, void *value);
+ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype);
 
 #endif  // !NDARRAY_H

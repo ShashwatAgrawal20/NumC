@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -7,6 +8,20 @@
 /*******************************************************************************
                                PRIVATE FUNCTIONS
 *******************************************************************************/
+
+static inline const char *_dtype_to_format(dtype_t type) {
+    switch (type) {
+        case nc_int:
+            return "%d ";
+        case nc_float:
+            return "%f ";
+        case nc_double:
+            return "%lf ";
+        default:
+            return NULL;
+    }
+}
+
 static inline size_t _dtype_size(dtype_t dtype) {
     switch (dtype) {
         case nc_int:
@@ -34,6 +49,35 @@ static inline void assign_value(void *ptr, double val, dtype_t dtype) {
             break;
         default:
             fprintf(stderr, "invalid dtype\n");
+    }
+}
+
+static inline void _nc_print_all(ndarray_t *array) {
+    if (!array) return;
+
+    const char *format = _dtype_to_format((array->dtype));
+    switch (array->dtype) {
+        case nc_int: {
+            int *data = (int *)array->data;
+            for (size_t i = 0; i < array->total_size; ++i) {
+                printf(format, data[i]);
+            }
+            break;
+        }
+        case nc_float: {
+            float *data = (float *)array->data;
+            for (size_t i = 0; i < array->total_size; ++i) {
+                printf(format, data[i]);
+            }
+            break;
+        }
+        case nc_double: {
+            double *data = (double *)array->data;
+            for (size_t i = 0; i < array->total_size; ++i) {
+                printf(format, data[i]);
+            }
+            break;
+        }
     }
 }
 
@@ -112,17 +156,17 @@ void nc_set(ndarray_t *array, size_t *indices, void *value) {
                 indices[i], i, array->shape[i]);
             return;
         }
-        printf("\t%zu, ", indices[i]);
+        // printf("\t%zu, ", indices[i]);
         offset += indices[i] * array->strides[i];
     }
     // These logs are meant to go but keeping these as of now for some debug
     // purposes.
-    printf("writing on -> %zu\n", offset);
-    printf(
-        "nc_set error: writing at offset %zu (total size: %zu | total "
-        "elements: "
-        "%zu)\n",
-        offset, array->total_size * array->item_size, array->total_size);
+    // printf("writing on -> %zu\n", offset);
+    // printf(
+    //     "nc_set error: writing at offset %zu (total size: %zu | total "
+    //     "elements: "
+    //     "%zu)\n",
+    //     offset, array->total_size * array->item_size, array->total_size);
 
     memcpy((char *)array->data + offset, value, array->item_size);
 }
@@ -177,7 +221,7 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
  * We don't need this btw it's just for development purposes but idk might
  * leave this here.
  * */
-void nc_display(ndarray_t *array) {
+void nc_display(ndarray_t *array, bool print_data) {
     if (!array) {
         printf("(null array)\n");
         return;
@@ -195,5 +239,12 @@ void nc_display(ndarray_t *array) {
     printf("  dtype: %d\n", array->dtype);
     printf("  total_size: %zu\n", array->total_size);
     printf("  item_size: %zu\n", array->item_size);
-    printf("  data: [ WE DON'T NEED TO SEE THAT ]\n\n");
+    /* AS OF NOW THIS SHIT WILL ONLY DISPALY DATA AS A 1D ARRAY BTW */
+    if (!print_data) {
+        printf("  data: [ WE DON'T NEED TO SEE THAT ]\n\n");
+    } else {
+        printf("  data: [ ");
+        _nc_print_all(array);
+        printf("] \n\n");
+    }
 }

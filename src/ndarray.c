@@ -217,6 +217,31 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
     return array;
 }
 
+ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim) {
+    if (!array || ndim <= 0) {
+        fprintf(stderr, "nc_reshape error: invalid input\n");
+        return NULL;
+    }
+
+    size_t new_total = 1;
+    for (int i = 0; i < ndim; ++i) {
+        new_total *= shape[i];
+    }
+    if (new_total != array->total_size) {
+        fprintf(stderr,
+                "nc_reshape error: shape mismatch (original total: %zu, new: "
+                "%zu)\n",
+                array->total_size, new_total);
+        return NULL;
+    }
+    ndarray_t *reshaped_array = nc_create(shape, ndim, array->dtype);
+    _check_null_return(reshaped_array);
+    memcpy(reshaped_array->data, array->data,
+           array->total_size * array->item_size);
+
+    return reshaped_array;
+}
+
 /*
  * We don't need this btw it's just for development purposes but idk might
  * leave this here.

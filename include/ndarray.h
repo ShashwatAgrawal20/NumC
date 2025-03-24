@@ -24,5 +24,6 @@ void nc_display(ndarray_t *array, bool print_data);
 void *nc_get(ndarray_t *array, size_t *indices);
 void nc_set(ndarray_t *array, size_t *indices, void *value);
 ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype);
+ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim);
 
 #endif  // !NDARRAY_H

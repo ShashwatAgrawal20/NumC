@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -156,17 +157,8 @@ void nc_set(ndarray_t *array, size_t *indices, void *value) {
                 indices[i], i, array->shape[i]);
             return;
         }
-        // printf("\t%zu, ", indices[i]);
         offset += indices[i] * array->strides[i];
     }
-    // These logs are meant to go but keeping these as of now for some debug
-    // purposes.
-    // printf("writing on -> %zu\n", offset);
-    // printf(
-    //     "nc_set error: writing at offset %zu (total size: %zu | total "
-    //     "elements: "
-    //     "%zu)\n",
-    //     offset, array->total_size * array->item_size, array->total_size);
 
     memcpy((char *)array->data + offset, value, array->item_size);
 }
@@ -217,7 +209,23 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
     return array;
 }
 
-ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim) {
+/**
+ * Notes on `is_inline`:
+ *  Use `is_inline = true` ONLY when:
+ *   - You're passing a temporary ndarray like `nc_arange(...)` directly into
+ *     `nc_reshape(...)`, e.g.:
+ *       nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
+ *   - Or you explicitly want to reshape in-place and understand that no new
+ *     memory will be allocated.
+ *
+ * WARNING:
+ * When `is_inline` is true, the reshaped array is the SAME pointer as the
+ * original. This means:
+ *   - Free only ONE of them — either the reshaped result or the original.
+ *   - If you store both pointers, do not assume they're separate objects.
+ */
+ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
+                      bool is_inline) {
     if (!array || ndim <= 0) {
         fprintf(stderr, "nc_reshape error: invalid input\n");
         return NULL;
@@ -234,6 +242,34 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim) {
                 array->total_size, new_total);
         return NULL;
     }
+
+    /*
+     * TODO: this internal computation shit is getting ugly might make different
+     * utility functions so that those will be used by both nc_create and here.
+     */
+    if (is_inline) {
+        if (array->ndim != ndim) {
+            size_t *new_shape = realloc(array->shape, ndim * sizeof(size_t));
+            size_t *new_strides =
+                realloc(array->strides, ndim * sizeof(size_t));
+            if (!new_shape || !new_strides) {
+                fprintf(stderr, "nc_reshape error: realloc failed\n");
+                return NULL;
+            }
+            array->shape = new_shape;
+            array->strides = new_strides;
+        }
+        memcpy(array->shape, shape, ndim * sizeof(size_t));
+        array->ndim = ndim;
+
+        array->strides[ndim - 1] = array->item_size;
+        for (int i = ndim - 2; i >= 0; --i) {
+            array->strides[i] = array->strides[i + 1] * shape[i + 1];
+        }
+
+        return array;
+    }
+
     ndarray_t *reshaped_array = nc_create(shape, ndim, array->dtype);
     _check_null_return(reshaped_array);
     memcpy(reshaped_array->data, array->data,

@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #define _check_alloc(allocation)                                      \
     if (allocation == NULL) {                                         \
@@ -17,4 +17,4 @@
         return NULL;       \
     }
 
-#endif  // !COMMON_H
+#endif  // !UTILS_H

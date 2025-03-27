@@ -1,7 +1,7 @@
 #include "../include/ndarray_ops.h"
 
-#include "../include/common.h"
 #include "../include/ndarray.h"
+#include "../include/utils.h"
 
 ndarray_t *nc_add(ndarray_t *a, ndarray_t *b) {
     if (!a || !b) {

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/common.h"
+#include "../include/utils.h"
 
 /*******************************************************************************
                                PRIVATE FUNCTIONS

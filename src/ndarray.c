@@ -1,10 +1,12 @@
+#include "../include/ndarray.h"
+
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/numc.h"
+#include "../include/common.h"
 
 /*******************************************************************************
                                PRIVATE FUNCTIONS
@@ -210,12 +212,14 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
 }
 
 /**
+ * @brief FUCK OFF CLANGD
  * Notes on `is_inline`:
- *  Use `is_inline = true` ONLY when:
- *   - You're passing a temporary ndarray like `nc_arange(...)` directly into
+ * Use `is_inline = true` ONLY when:
+ *   * You're passing a temporary ndarray like `nc_arange(...)` directly into
  *     `nc_reshape(...)`, e.g.:
  *       nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
- *   - Or you explicitly want to reshape in-place and understand that no new
+ *
+ *   * Or you explicitly want to reshape in-place and understand that no new
  *     memory will be allocated.
  *
  * WARNING:
@@ -278,10 +282,16 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
     return reshaped_array;
 }
 
-/*
- * We don't need this btw it's just for development purposes but idk might
- * leave this here.
- * */
+/**
+ * Debug print for an ndarray_t struct.
+ *
+ * Parameters:
+ *  * `array`: Pointer to the ndarray.
+ *  * `print_data`: If true, prints data; else just metadata.
+ *
+ * Notes:
+ *  * Data is printed as a 1D flat array.
+ */
 void nc_display(ndarray_t *array, bool print_data) {
     if (!array) {
         printf("(null array)\n");

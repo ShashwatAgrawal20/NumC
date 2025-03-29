@@ -34,12 +34,12 @@ static inline size_t _dtype_size(dtype_t dtype) {
         case nc_double:
             return sizeof(double);
         default:
-            fprintf(stderr, "invalid dtype\n");
+            fprintf(stderr, "_dtype_size error: invalid dtype (%d)\n", dtype);
             return 0;
     }
 }
 
-static inline void assign_value(void *ptr, double val, dtype_t dtype) {
+static inline void _assign_value(void *ptr, double val, dtype_t dtype) {
     switch (dtype) {
         case nc_int:
             *(int *)ptr = (int)val;
@@ -51,7 +51,7 @@ static inline void assign_value(void *ptr, double val, dtype_t dtype) {
             *(double *)ptr = val;
             break;
         default:
-            fprintf(stderr, "invalid dtype\n");
+            fprintf(stderr, "_assign_value error: invalid dtype (%d)\n", dtype);
     }
 }
 
@@ -59,29 +59,46 @@ static inline void _nc_print_all(ndarray_t *array) {
     if (!array) return;
 
     const char *format = _dtype_to_format((array->dtype));
+
+#define CAST_AND_PRINT_ELEMS(TYPE)                       \
+    do {                                                 \
+        TYPE *data = (TYPE *)array->data;                \
+        for (size_t i = 0; i < array->total_size; ++i) { \
+            printf(format, data[i]);                     \
+        }                                                \
+    } while (0)
+
     switch (array->dtype) {
-        case nc_int: {
-            int *data = (int *)array->data;
-            for (size_t i = 0; i < array->total_size; ++i) {
-                printf(format, data[i]);
-            }
+        case nc_int:
+            CAST_AND_PRINT_ELEMS(int);
             break;
-        }
-        case nc_float: {
-            float *data = (float *)array->data;
-            for (size_t i = 0; i < array->total_size; ++i) {
-                printf(format, data[i]);
-            }
+        case nc_float:
+            CAST_AND_PRINT_ELEMS(float);
             break;
-        }
-        case nc_double: {
-            double *data = (double *)array->data;
-            for (size_t i = 0; i < array->total_size; ++i) {
-                printf(format, data[i]);
-            }
+        case nc_double:
+            CAST_AND_PRINT_ELEMS(double);
             break;
-        }
     }
+
+#undef CAST_AND_PRINT_ELEMS
+}
+
+static inline void _compute_strides(ndarray_t *array) {
+    if (!array || array->ndim <= 0) return;
+
+    array->strides[array->ndim - 1] = array->item_size;
+    for (int i = array->ndim - 2; i >= 0; --i) {
+        array->strides[i] = array->strides[i + 1] * array->shape[i + 1];
+    }
+}
+
+static inline void _compute_total_size(ndarray_t *array) {
+    if (!array) return;
+    size_t total = 1;
+    for (int i = 0; i < array->ndim; ++i) {
+        total *= array->shape[i];
+    }
+    array->total_size = total;
 }
 
 /*******************************************************************************
@@ -110,15 +127,17 @@ ndarray_t *nc_create(size_t *shape, int ndim, dtype_t dtype) {
     array->dtype = dtype;
     array->item_size = dtype_size;
     array->ndim = ndim;
-    array->total_size = 1;
-    array->strides[ndim - 1] = dtype_size;
+    _compute_total_size(array);
+    _compute_strides(array);
+    // array->total_size = 1;
+    // array->strides[ndim - 1] = dtype_size;
 
-    for (int i = ndim - 1; i >= 0; --i) {
-        array->total_size *= shape[i];
-        if (i > 0) {
-            array->strides[i - 1] = array->strides[i] * shape[i];
-        }
-    }
+    // for (int i = ndim - 1; i >= 0; --i) {
+    //     array->total_size *= shape[i];
+    //     if (i > 0) {
+    //         array->strides[i - 1] = array->strides[i] * shape[i];
+    //     }
+    // }
 
     array->data = calloc(array->total_size, dtype_size);
     _check_alloc(array->data);
@@ -206,7 +225,7 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
         void *element = array->data + i * array->item_size;
         double value = start + i * step;
 
-        assign_value(element, value, dtype);
+        _assign_value(element, value, dtype);
     }
     return array;
 }
@@ -266,10 +285,7 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
         memcpy(array->shape, shape, ndim * sizeof(size_t));
         array->ndim = ndim;
 
-        array->strides[ndim - 1] = array->item_size;
-        for (int i = ndim - 2; i >= 0; --i) {
-            array->strides[i] = array->strides[i + 1] * shape[i + 1];
-        }
+        _compute_strides(array);
 
         return array;
     }

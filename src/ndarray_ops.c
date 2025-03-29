@@ -15,6 +15,12 @@ ndarray_t *nc_add(ndarray_t *a, ndarray_t *b) {
         return NULL;
     }
 
+    if (a->dtype != b->dtype) {
+        fprintf(stderr, "nc_add error: dtype mismatch (%d vs %d)\n", a->dtype,
+                b->dtype);
+        return NULL;
+    }
+
     for (int i = 0; i < a->ndim; ++i) {
         if (a->shape[i] != b->shape[i]) {
             fprintf(stderr,

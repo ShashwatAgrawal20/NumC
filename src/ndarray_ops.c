@@ -34,29 +34,33 @@ static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b,
     return true;
 }
 
+#define _NC_BINARY_OP_WRAPPER(operator, op_name)                           \
+    do {                                                                   \
+        if (!_check_binary_op_compat(a, b, op_name)) {                     \
+            return NULL;                                                   \
+        }                                                                  \
+        ndarray_t *result = nc_create(a->shape, a->ndim, a->dtype);        \
+        _check_null_return(result);                                        \
+        switch (a->dtype) {                                                \
+            case nc_int:                                                   \
+                NC_BINARY_OP(int, operator);                               \
+                break;                                                     \
+            case nc_float:                                                 \
+                NC_BINARY_OP(float, operator);                             \
+                break;                                                     \
+            case nc_double:                                                \
+                NC_BINARY_OP(double, operator);                            \
+                break;                                                     \
+            default:                                                       \
+                fprintf(stderr, "%s error: unsupported dtype\n", op_name); \
+                nc_free(&result);                                          \
+                return NULL;                                               \
+        }                                                                  \
+        return result;                                                     \
+    } while (0);
+
 ndarray_t *nc_add(ndarray_t *a, ndarray_t *b) {
-    if (!_check_binary_op_compat(a, b, "nc_add")) {
-        return NULL;
-    }
-
-    ndarray_t *result = nc_create(a->shape, a->ndim, a->dtype);
-    _check_null_return(result);
-
-    switch (a->dtype) {
-        case nc_int:
-            NC_BINARY_OP(int, +);
-            break;
-        case nc_float:
-            NC_BINARY_OP(float, +);
-            break;
-        case nc_double:
-            NC_BINARY_OP(double, +);
-            break;
-        default:
-            fprintf(stderr, "nc_add error: unsupported dtype\n");
-            nc_free(&result);
-            return NULL;
-    }
-
-    return result;
+    _NC_BINARY_OP_WRAPPER(+, "nc_add");
 }
+
+#undef _NC_BINARY_OP_WRAPPER

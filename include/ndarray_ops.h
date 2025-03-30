@@ -17,5 +17,6 @@
     } while (0)
 
 ndarray_t *nc_add(ndarray_t *a, ndarray_t *b);
+ndarray_t *nc_mul(ndarray_t *a, ndarray_t *b);
 
 #endif  // !NDARRAY_OPS_H

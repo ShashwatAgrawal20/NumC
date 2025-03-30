@@ -34,6 +34,16 @@ static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b,
     return true;
 }
 
+#define _NC_BINARY_OP(type, op)                      \
+    do {                                             \
+        type *ad = (type *)a->data;                  \
+        type *bd = (type *)b->data;                  \
+        type *rd = (type *)result->data;             \
+        for (size_t i = 0; i < a->total_size; ++i) { \
+            rd[i] = ad[i] op bd[i];                  \
+        }                                            \
+    } while (0)
+
 #define _NC_BINARY_OP_WRAPPER(operator, op_name)                           \
     do {                                                                   \
         if (!_check_binary_op_compat(a, b, op_name)) {                     \
@@ -43,13 +53,13 @@ static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b,
         _check_null_return(result);                                        \
         switch (a->dtype) {                                                \
             case nc_int:                                                   \
-                NC_BINARY_OP(int, operator);                               \
+                _NC_BINARY_OP(int, operator);                              \
                 break;                                                     \
             case nc_float:                                                 \
-                NC_BINARY_OP(float, operator);                             \
+                _NC_BINARY_OP(float, operator);                            \
                 break;                                                     \
             case nc_double:                                                \
-                NC_BINARY_OP(double, operator);                            \
+                _NC_BINARY_OP(double, operator);                           \
                 break;                                                     \
             default:                                                       \
                 fprintf(stderr, "%s error: unsupported dtype\n", op_name); \
@@ -63,4 +73,9 @@ ndarray_t *nc_add(ndarray_t *a, ndarray_t *b) {
     _NC_BINARY_OP_WRAPPER(+, "nc_add");
 }
 
+ndarray_t *nc_mul(ndarray_t *a, ndarray_t *b) {
+    _NC_BINARY_OP_WRAPPER(*, "nc_mul");
+}
+
 #undef _NC_BINARY_OP_WRAPPER
+#undef _NC_BINARY_OP

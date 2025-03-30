@@ -96,6 +96,20 @@ int main() {
             nc_free(&hehe_2);
             nc_free(&hehe_3);
         }
+        /* nc_mul SHIT */
+        {
+            size_t shape[] = {3, 4};
+            ndarray_t *hehe_1 =
+                nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
+            ndarray_t *hehe_2 =
+                nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
+            ndarray_t *hehe_3 = nc_mul(hehe_1, hehe_2);
+            nc_display(hehe_3, true);
+
+            nc_free(&hehe_1);
+            nc_free(&hehe_2);
+            nc_free(&hehe_3);
+        }
     }
 
     return 0;

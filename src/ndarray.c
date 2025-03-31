@@ -222,7 +222,7 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
     _check_null_return(array);
 
     for (size_t i = 0; i < length; ++i) {
-        void *element = array->data + i * array->item_size;
+        void *element = (char *)array->data + i * array->item_size;
         double value = start + i * step;
 
         _assign_value(element, value, dtype);

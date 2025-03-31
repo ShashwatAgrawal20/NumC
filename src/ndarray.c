@@ -246,12 +246,20 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
  * original. This means:
  *   - Free only ONE of them — either the reshaped result or the original.
  *   - If you store both pointers, do not assume they're separate objects.
+ *
+ * 🚨 If you pass `is_inline=true` for an array stored in a **variable**
+ *    (instead of a temporary), **it will be freed if an error occurs**. If
+ *    there's no error, the reshape happens in-place.
+ *
+ * 🚨 **DO NOT** use `is_inline=true` on non-temporary arrays( unless you are
+ *    100% sure you want the original array to be modified **AND** risk it being
+ *    freed on failure.
  */
 ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
                       bool is_inline) {
     if (!array || ndim <= 0) {
         fprintf(stderr, "nc_reshape error: invalid input\n");
-        return NULL;
+        _check_fail();
     }
 
     size_t new_total = 1;
@@ -263,7 +271,7 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
                 "nc_reshape error: shape mismatch (original total: %zu, new: "
                 "%zu)\n",
                 array->total_size, new_total);
-        return NULL;
+        _check_fail();
     }
 
     /*
@@ -277,7 +285,9 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
                 realloc(array->strides, ndim * sizeof(size_t));
             if (!new_shape || !new_strides) {
                 fprintf(stderr, "nc_reshape error: realloc failed\n");
-                return NULL;
+                free(new_shape);
+                free(new_strides);
+                _check_fail();
             }
             array->shape = new_shape;
             array->strides = new_strides;
@@ -296,6 +306,13 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
            array->total_size * array->item_size);
 
     return reshaped_array;
+
+defer:
+    if (is_inline) {
+        if (array) nc_free(&array);
+    }
+
+    return NULL;
 }
 
 /**

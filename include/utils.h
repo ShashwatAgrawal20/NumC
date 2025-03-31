@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#define _check_fail() goto defer
+
 #define _check_alloc(allocation)                                      \
     if (allocation == NULL) {                                         \
         fprintf(stderr, "malloc error: Memory allocation failed!\n"); \

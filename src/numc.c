@@ -54,28 +54,34 @@ int main() {
     // RESHAPE THIS SHIT
     {
         size_t shape[] = {3, 4};
+        size_t ndim = sizeof(shape) / sizeof(shape[0]);
         ndarray_t *fucking_trying_arange_int = nc_arange(0, 12, 1, nc_int);
         nc_display(fucking_trying_arange_int, true);
         ndarray_t *hehe_1 =
             nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
+        /* IF YOU'RE DOING SHIT LIKE THIS JUST DON'T USE THE ANOTHER ARRAY IN
+         * ANY CASE THAT WILL CAUSE UNCONDITIONAL SHIT AND STUFF.
+            // nc_display(fucking_trying_arange_int, true);
+            // nc_free(&fucking_trying_arange_int);
+            // WILL RELEASE A DIFFERENT FUNCTION TO CHANGE THING INPLACE.
+         */
         ndarray_t *hehe_2 =
-            nc_reshape(fucking_trying_arange_int, shape, 2, true);
+            nc_reshape(fucking_trying_arange_int, shape, ndim, true);
+        // printf("hehe_2 -> %p\n", (void *)hehe_2);
         nc_display(hehe_1, true);
         nc_display(hehe_2, true);
-        nc_display(fucking_trying_arange_int, true);
         nc_free(&hehe_1);
         nc_free(&hehe_2);
-        nc_free(&hehe_2);
-        // nc_free(&fucking_trying_arange_int);
     }
 
-    // ADD OPERATION
+    // OPERATION
     {
         /* FOR SINGLE DIMENSION */
         {
             ndarray_t *a = nc_arange(0, 50, 5, nc_int);
             ndarray_t *b = nc_arange(10, 20, 1, nc_int);
 
+            printf("nc_add -> ");
             ndarray_t *c = nc_add(a, b);
             nc_display(c, true);
             nc_free(&a);
@@ -89,6 +95,7 @@ int main() {
                 nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
             ndarray_t *hehe_2 =
                 nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
+            printf("nc_add multi dimensional-> ");
             ndarray_t *hehe_3 = nc_add(hehe_1, hehe_2);
             nc_display(hehe_3, true);
 
@@ -104,6 +111,40 @@ int main() {
             ndarray_t *hehe_2 =
                 nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
             ndarray_t *hehe_3 = nc_mul(hehe_1, hehe_2);
+            printf("nc_mul -> ");
+            nc_display(hehe_3, true);
+
+            nc_free(&hehe_1);
+            nc_free(&hehe_2);
+            nc_free(&hehe_3);
+        }
+        /* nc_sub SHIT */
+        {
+            size_t shape[] = {3, 4};
+            ndarray_t *hehe_1 = nc_reshape(nc_arange(0, 12, 1, nc_int), shape,
+                                           nc_dim_count(shape), true);
+            ndarray_t *hehe_2 = nc_reshape(nc_arange(0, 12, 1, nc_int), shape,
+                                           nc_dim_count(shape), true);
+            ndarray_t *hehe_3 = nc_sub(hehe_1, hehe_2);
+            printf("nc_sub -> ");
+            nc_display(hehe_3, true);
+
+            nc_free(&hehe_1);
+            nc_free(&hehe_2);
+            nc_free(&hehe_3);
+        }
+        /* nc_div SHIT */
+        {
+            size_t shape[] = {2, 5};
+            ndarray_t *hehe_1 = nc_reshape(nc_arange(100, 1100, 100, nc_int),
+                                           shape, nc_dim_count(shape), true);
+            ndarray_t *hehe_2 = nc_reshape(nc_arange(1, 21, 2, nc_int), shape,
+                                           nc_dim_count(shape), true);
+            // ndarray_t *hehe_2 = nc_reshape(nc_arange(10, 20, 1, nc_int),
+            // shape,
+            //                                nc_dim_count(shape), true);
+            ndarray_t *hehe_3 = nc_div(hehe_1, hehe_2);
+            printf("nc_div -> ");
             nc_display(hehe_3, true);
 
             nc_free(&hehe_1);
@@ -111,6 +152,5 @@ int main() {
             nc_free(&hehe_3);
         }
     }
-
     return 0;
 }

@@ -92,9 +92,9 @@ int main() {
         {
             size_t shape[] = {3, 4};
             ndarray_t *hehe_1 =
-                nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
-            ndarray_t *hehe_2 =
-                nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
+                nc_reshape(nc_arange(0, 12, 1, nc_int), SND(shape), true);
+            ndarray_t *hehe_2 = nc_reshape(nc_arange(0, 12, 1, nc_int), shape,
+                                           nc_dim_count(shape), true);
             printf("nc_add multi dimensional-> ");
             ndarray_t *hehe_3 = nc_add(hehe_1, hehe_2);
             nc_display(hehe_3, true);

@@ -1,15 +1,16 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic
-TARGET = numc
-SOURCE = src/*.c
+TARGET = numc_example
+SRC = src/*/*.c
+EXAMPLE = example/numc_example.c
 
 all: $(TARGET)
 
-$(TARGET): $(SOURCE)
+$(TARGET): $(SRC) $(EXAMPLE)
 		$(CC) $(CFLAGS) -o $@ $^ -lm
 
 run: $(TARGET)
-		./numc
+		./$(TARGET)
 
 .PHONY: all clean
 clean:

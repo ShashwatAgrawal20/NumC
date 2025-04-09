@@ -1,12 +1,32 @@
-#include "../include/numc.h"
-
 #include <stdio.h>
+
+#include "../include/numc.h"
 
 #define NUM_OF_ARRAYS 2
 #define NDIM 3
 
 int main() {
     printf("NumC: A NumPy-like numerical computing library in C.\n");
+
+    /* nc_slice example */
+    {
+        size_t shape[] = {3, 4};
+        ndarray_t *original =
+            nc_reshape(nc_arange(0, 12, 1, nc_int), SND(shape), true);
+
+        slice_t slices[] = {
+            {.start = 1},  // for row axis (axis 0)
+            {0}            // for column axis (axis 0)
+        };
+
+        ndarray_t *sliced = nc_slice(original, SND(slices));
+        nc_display(sliced, true);
+
+        nc_free(&original);
+        nc_free(&sliced);
+    }
+
+    return 0;
 
     // ARRAY OF NDARRAYS
     {

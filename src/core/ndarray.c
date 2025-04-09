@@ -119,6 +119,7 @@ ndarray_t *nc_create(size_t *shape, int ndim, dtype_t dtype) {
 
     array->shape = malloc(ndim * sizeof(size_t));
     array->strides = malloc(ndim * sizeof(size_t));
+    array->owns_data = true;
     _check_alloc(array->shape);
     _check_alloc(array->strides);
 
@@ -157,7 +158,11 @@ defer:
 void nc_free(ndarray_t **array) {
     if (!array || !(*array)) return;
 
-    free((*array)->data);
+    if ((*array)->owns_data) {
+        free((*array)->data);
+    }
+
+    // free((*array)->data);
     free((*array)->shape);
     free((*array)->strides);
     free((*array));

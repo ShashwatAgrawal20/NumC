@@ -19,4 +19,18 @@
         return NULL;       \
     }
 
+#define _log_and_return(msg)          \
+    do {                              \
+        fprintf(stderr, "%s\n", msg); \
+        return NULL;                  \
+    } while (0)
+
+#define _GUARD(expr, msg)                 \
+    do {                                  \
+        if (expr) {                       \
+            fprintf(stderr, "%s\n", msg); \
+            return NULL;                  \
+        }                                 \
+    } while (0)
+
 #endif  // !UTILS_H

@@ -15,6 +15,7 @@ typedef struct {
     size_t item_size;
     dtype_t dtype;
     int ndim;
+    bool owns_data;
 } ndarray_t;
 
 ndarray_t *nc_create(size_t *shape, int ndim, dtype_t dtype);

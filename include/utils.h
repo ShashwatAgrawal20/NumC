@@ -19,16 +19,15 @@
         return NULL;       \
     }
 
-#define _log_and_return(msg)          \
+#define _ELOG(...)                    \
     do {                              \
-        fprintf(stderr, "%s\n", msg); \
-        return NULL;                  \
+        fprintf(stderr, __VA_ARGS__); \
     } while (0)
 
-#define _GUARD(expr, msg)                 \
+#define _GUARD(expr, ...)                 \
     do {                                  \
         if (expr) {                       \
-            fprintf(stderr, "%s\n", msg); \
+            fprintf(stderr, __VA_ARGS__); \
             return NULL;                  \
         }                                 \
     } while (0)

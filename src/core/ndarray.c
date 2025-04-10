@@ -34,7 +34,7 @@ static inline size_t _dtype_size(dtype_t dtype) {
         case nc_double:
             return sizeof(double);
         default:
-            fprintf(stderr, "_dtype_size error: invalid dtype (%d)\n", dtype);
+            _ELOG("_dtype_size error: invalid dtype (%d)\n", dtype);
             return 0;
     }
 }
@@ -51,7 +51,7 @@ static inline void _assign_value(void *ptr, double val, dtype_t dtype) {
             *(double *)ptr = val;
             break;
         default:
-            fprintf(stderr, "_assign_value error: invalid dtype (%d)\n", dtype);
+            _ELOG("_assign_value error: invalid dtype (%d)\n", dtype);
     }
 }
 
@@ -105,12 +105,8 @@ static inline void _compute_total_size(ndarray_t *array) {
                                 PUBLIC FUNCTIONS
 *******************************************************************************/
 ndarray_t *nc_create(size_t *shape, int ndim, dtype_t dtype) {
-    if (ndim <= 0) {
-        fprintf(stderr,
-                "nc_create error: can't initialize ndarray of dimention %d",
-                ndim);
-        return NULL;
-    }
+    _GUARD(ndim <= 0,
+           "nc_create error: can't initialize ndarray of dimention %d", ndim);
     size_t dtype_size = _dtype_size(dtype);
     _check_zero(dtype_size);
 
@@ -171,14 +167,13 @@ void nc_free(ndarray_t **array) {
 
 void nc_set(ndarray_t *array, size_t *indices, void *value) {
     if (!array || !array->data) {
-        fprintf(stderr, "nc_set error: array doesn't exists\n");
+        _ELOG("nc_set error: array doesn't exists\n");
         return;
     }
     size_t offset = 0;
-    for (int i = 0; i < array->ndim; i++) {
+    for (int i = 0; i < array->ndim; ++i) {
         if (indices[i] >= array->shape[i]) {
-            fprintf(
-                stderr,
+            _ELOG(
                 "nc_set error: index out of bounds: %zu (axis %d, shape %zu)\n",
                 indices[i], i, array->shape[i]);
             return;
@@ -192,14 +187,10 @@ void nc_set(ndarray_t *array, size_t *indices, void *value) {
 void *nc_get(ndarray_t *array, size_t *indices) {
     if (!array || !array->data) return NULL;
     size_t offset = 0;
-    for (int i = 0; i < array->ndim; i++) {
-        if (indices[i] >= array->shape[i]) {
-            fprintf(
-                stderr,
-                "nc_get error: index out of bounds: %zu (axis %d, shape %zu)\n",
-                indices[i], i, array->shape[i]);
-            return NULL;
-        }
+    for (int i = 0; i < array->ndim; ++i) {
+        _GUARD(indices[i] >= array->shape[i],
+               "nc_get error: index out of bounds: %zu (axis %d, shape %zu)\n",
+               indices[i], i, array->shape[i]);
         offset += indices[i] * array->strides[i];
     }
 
@@ -207,10 +198,7 @@ void *nc_get(ndarray_t *array, size_t *indices) {
 }
 
 ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
-    if (step == 0.0) {
-        fprintf(stderr, "nd_arange error: step cannot be zero.\n");
-        return NULL;
-    }
+    _GUARD(step == 0.0, "nd_arange error: step cannot be zero.\n");
 
     /*
         TODO: I DON'T LIKE THIS CEIL SHIT CAUSE I'VE TO MANUALLY DO THAT LM SHIT
@@ -263,7 +251,7 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
 ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
                       bool is_inline) {
     if (!array || ndim <= 0) {
-        fprintf(stderr, "nc_reshape error: invalid input\n");
+        _ELOG("nc_reshape error: invalid input\n");
         _check_fail();
     }
 
@@ -272,10 +260,10 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
         new_total *= shape[i];
     }
     if (new_total != array->total_size) {
-        fprintf(stderr,
-                "nc_reshape error: shape mismatch (original total: %zu, new: "
-                "%zu)\n",
-                array->total_size, new_total);
+        _ELOG(
+            "nc_reshape error: shape mismatch (original total: %zu, new: "
+            "%zu)\n",
+            array->total_size, new_total);
         _check_fail();
     }
 
@@ -289,7 +277,7 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
             size_t *new_strides =
                 realloc(array->strides, ndim * sizeof(size_t));
             if (!new_shape || !new_strides) {
-                fprintf(stderr, "nc_reshape error: realloc failed\n");
+                _ELOG("nc_reshape error: realloc failed\n");
                 free(new_shape);
                 free(new_strides);
                 _check_fail();
@@ -338,11 +326,11 @@ void nc_display(ndarray_t *array, bool print_data) {
     printf("ndarray_t:\n");
     printf("  ndim: %d\n", array->ndim);
     printf("  shape: [");
-    for (int i = 0; i < array->ndim; i++)
+    for (int i = 0; i < array->ndim; ++i)
         printf("%zu%s", array->shape[i], (i < array->ndim - 1) ? ", " : "");
     printf("]\n");
     printf("  strides: [");
-    for (int i = 0; i < array->ndim; i++)
+    for (int i = 0; i < array->ndim; ++i)
         printf("%zu%s", array->strides[i], (i < array->ndim - 1) ? ", " : "");
     printf("]\n");
     printf("  dtype: %d\n", array->dtype);

@@ -6,27 +6,26 @@
 static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b,
                                            const char *op_name) {
     if (!a || !b) {
-        fprintf(stderr, "%s error: one or both arrays are NULL\n", op_name);
+        _ELOG("%s error: one or both arrays are NULL\n", op_name);
         return false;
     }
 
     if (a->ndim != b->ndim) {
-        fprintf(stderr, "%s error: dimension mismatch (%d vs %d)\n", op_name,
-                a->ndim, b->ndim);
+        _ELOG("%s error: dimension mismatch (%d vs %d)\n", op_name, a->ndim,
+              b->ndim);
         return false;
     }
 
     if (a->dtype != b->dtype) {
-        fprintf(stderr, "%s error: dtype mismatch (%d vs %d)\n", op_name,
-                a->dtype, b->dtype);
+        _ELOG("%s error: dtype mismatch (%d vs %d)\n", op_name, a->dtype,
+              b->dtype);
         return false;
     }
 
     for (int i = 0; i < a->ndim; ++i) {
         if (a->shape[i] != b->shape[i]) {
-            fprintf(stderr,
-                    "%s error: shape mismatch at axis %d (%zu vs %zu)\n",
-                    op_name, i, a->shape[i], b->shape[i]);
+            _ELOG("%s error: shape mismatch at axis %d (%zu vs %zu)\n", op_name,
+                  i, a->shape[i], b->shape[i]);
             return false;
         }
     }

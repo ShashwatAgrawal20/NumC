@@ -10,6 +10,7 @@ ndarray_t *nc_slice(ndarray_t *array, slice_t *slices, int num_slices) {
     ndarray_t *view = nc_create(array->shape, array->ndim, array->dtype);
     _GUARD(!view, "slice error: cannot create a view\n");
     free(view->data);
+    view->data = NULL;
     view->owns_data = false;
 
     size_t offset = 0;
@@ -25,7 +26,7 @@ ndarray_t *nc_slice(ndarray_t *array, slice_t *slices, int num_slices) {
         offset += array->strides[i] * s.start;
     }
     view->total_size = 1;
-    for (int i = 0; i < view->ndim; i++) view->total_size *= view->shape[i];
+    for (int i = 0; i < view->ndim; ++i) view->total_size *= view->shape[i];
 
     view->data = (char *)array->data + offset;
 

@@ -1,4 +1,4 @@
-#include "../../include/ndarray.h"
+#include "core/ndarray.h"
 
 #include <assert.h>
 #include <math.h>
@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../include/utils.h"
+#include "internal/utils.h"
 
 /*******************************************************************************
                                PRIVATE FUNCTIONS

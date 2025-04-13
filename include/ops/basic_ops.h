@@ -1,7 +1,7 @@
 #ifndef BASIC_OPS_H
 #define BASIC_OPS_H
 
-#include "ndarray.h"
+#include "core/ndarray.h"
 
 /*
  * not sure if I want to use those nc_set and nc_get things??

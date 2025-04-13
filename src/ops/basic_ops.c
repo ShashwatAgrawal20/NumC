@@ -1,7 +1,7 @@
-#include "../../include/basic_ops.h"
+#include "ops/basic_ops.h"
 
-#include "../../include/ndarray.h"
-#include "../../include/utils.h"
+#include "core/ndarray.h"
+#include "internal/utils.h"
 
 static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b,
                                            const char *op_name) {

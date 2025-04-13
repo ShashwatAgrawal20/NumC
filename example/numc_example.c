@@ -5,7 +5,7 @@
 #define NUM_OF_ARRAYS 2
 #define NDIM 3
 
-int main() {
+int main(void) {
     printf("NumC: A NumPy-like numerical computing library in C.\n");
 
     /* nc_slice example */

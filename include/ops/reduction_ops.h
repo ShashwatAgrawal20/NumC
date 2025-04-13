@@ -1,0 +1,4 @@
+#ifndef REDUCTION_OPS_H
+#define REDUCTION_OPS_H
+
+#endif  // !REDUCTION_OPS_H

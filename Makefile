@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic
+CFLAGS = -Wall -Wextra -pedantic -Iinclude
 TARGET = numc_example
 SRC = src/*/*.c
 EXAMPLE = example/numc_example.c

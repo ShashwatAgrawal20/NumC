@@ -1,22 +1,49 @@
 #include <stdio.h>
 
-#include "../include/numc.h"
-
-#define NUM_OF_ARRAYS 2
-#define NDIM 3
+#include "numc.h"
 
 int main(void) {
     printf("NumC: A NumPy-like numerical computing library in C.\n");
 
+    {
+        ndarray_t *bs = nc_arange(1, 2, 1, nc_int);
+        nc_display(bs, true);
+        nc_free(&bs);
+    }
+    {
+        size_t shape[] = {2, 2, 2, 2};
+        ndarray_t *original =
+            nc_reshape(nc_arange(0, 16, 1, nc_double), SND(shape), true);
+        nc_display(original, true);
+        nc_free(&original);
+    }
+    // return 0;
+
+    {
+        size_t shape[] = {4, 5, 5};
+
+        ndarray_t *original =
+            nc_reshape(nc_arange(0, 100, 1, nc_int), SND(shape), true);
+
+        slice_t slices[3] = {0};
+
+        ndarray_t *sliced = nc_slice(original, SND(slices));
+        nc_display(sliced, true);
+
+        nc_free(&original);
+        nc_free(&sliced);
+    }
+
     /* nc_slice example */
     {
-        size_t shape[] = {3, 4};
+        size_t shape[] = {20, 5};
+
         ndarray_t *original =
-            nc_reshape(nc_arange(0, 12, 1, nc_int), SND(shape), true);
+            nc_reshape(nc_arange(0, 100, 1, nc_int), SND(shape), true);
 
         slice_t slices[] = {
-            {.start = 1},  // for row axis (axis 0)
-            {0}            // for column axis (axis 0)
+            {.start = 0, .step = 2},  // rows: take every other row
+            {.start = 0, .step = 1}   // columns: take every column
         };
 
         ndarray_t *sliced = nc_slice(original, SND(slices));
@@ -30,6 +57,8 @@ int main(void) {
 
     // ARRAY OF NDARRAYS
     {
+#define NUM_OF_ARRAYS 2
+#define NDIM 3
         size_t shapes[NUM_OF_ARRAYS][NDIM] = {{10, 1920, 1080}, {8, 16, 32}};
         dtype_t dtypes[NUM_OF_ARRAYS] = {nc_int, nc_float};
 

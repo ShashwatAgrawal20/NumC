@@ -15,11 +15,11 @@
 static inline const char *_dtype_to_format(dtype_t type) {
     switch (type) {
         case nc_int:
-            return "%d ";
+            return "%d";
         case nc_float:
-            return "%f ";
+            return "%f";
         case nc_double:
-            return "%lf ";
+            return "%lf";
         default:
             return NULL;
     }
@@ -55,32 +55,54 @@ static inline void _assign_value(void *ptr, double val, dtype_t dtype) {
     }
 }
 
+static inline void _nc_print_recursive(ndarray_t *array, int dim, size_t offset,
+                                       int indent_level) {
+#define CAST_AND_PRINT_ELEMS(TYPE)                                          \
+    do {                                                                    \
+        const char *format = _dtype_to_format((array->dtype));              \
+        for (size_t i = 0; i < array->shape[dim]; ++i) {                    \
+            size_t byte_offset = offset + i * array->strides[dim];          \
+            const char *data_ptr = (const char *)array->data + byte_offset; \
+            printf(format, *(TYPE *)data_ptr);                              \
+            if (i < array->shape[dim] - 1) printf(", ");                    \
+        }                                                                   \
+    } while (0);
+
+    if (dim == array->ndim - 1) {
+        printf("%*s[", indent_level * 3, "");
+        switch (array->dtype) {
+            case nc_int:
+                CAST_AND_PRINT_ELEMS(int);
+                break;
+            case nc_float:
+                CAST_AND_PRINT_ELEMS(float);
+                break;
+            case nc_double:
+                CAST_AND_PRINT_ELEMS(double);
+                break;
+        }
+        printf("]");
+    } else {
+        printf("%*s[\n", indent_level * 3, "");
+        for (size_t i = 0; i < array->shape[dim]; ++i) {
+            size_t sub_offset = offset + i * array->strides[dim];
+            _nc_print_recursive(array, dim + 1, sub_offset, indent_level + 1);
+            if (i < array->shape[dim] - 1) {
+                printf(",\n");  // Comma between sub-arrays
+            }
+        }
+        printf("\n%*s]", (indent_level == 0) ? 2 : indent_level * 3, "");
+    }
+#undef CAST_AND_PRINT_ELEMS
+}
+
 static inline void _nc_print_all(ndarray_t *array) {
-    if (!array) return;
-
-    const char *format = _dtype_to_format((array->dtype));
-
-#define CAST_AND_PRINT_ELEMS(TYPE)                       \
-    do {                                                 \
-        TYPE *data = (TYPE *)array->data;                \
-        for (size_t i = 0; i < array->total_size; ++i) { \
-            printf(format, data[i]);                     \
-        }                                                \
-    } while (0)
-
-    switch (array->dtype) {
-        case nc_int:
-            CAST_AND_PRINT_ELEMS(int);
-            break;
-        case nc_float:
-            CAST_AND_PRINT_ELEMS(float);
-            break;
-        case nc_double:
-            CAST_AND_PRINT_ELEMS(double);
-            break;
+    if (!array || !array->data) {
+        _ELOG("nc_display error: ");
+        return;
     }
 
-#undef CAST_AND_PRINT_ELEMS
+    _nc_print_recursive(array, 0, 0, 0);
 }
 
 static inline void _compute_strides(ndarray_t *array) {
@@ -320,7 +342,8 @@ defer:
  */
 void nc_display(ndarray_t *array, bool print_data) {
     if (!array) {
-        printf("(null array)\n");
+        // printf("(null array)\");
+        _ELOG("nc_display error: (null array)\n");
         return;
     }
     printf("ndarray_t:\n");
@@ -340,8 +363,8 @@ void nc_display(ndarray_t *array, bool print_data) {
     if (!print_data) {
         printf("  data: [ WE DON'T NEED TO SEE THAT ]\n\n");
     } else {
-        printf("  data: [ ");
+        printf("  data:(");
         _nc_print_all(array);
-        printf("] \n\n");
+        printf(")\n");
     }
 }

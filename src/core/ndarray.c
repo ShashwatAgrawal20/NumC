@@ -1,4 +1,4 @@
-#include "numc.h"
+#include "numc/numc.h"
 
 #include <assert.h>
 #include <math.h>
@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "internal/utils.h"
+#include "numc/internal/utils.h"
 
 /*******************************************************************************
                                PRIVATE FUNCTIONS

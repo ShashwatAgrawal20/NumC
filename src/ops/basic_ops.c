@@ -1,5 +1,5 @@
-#include "numc.h"
-#include "internal/utils.h"
+#include "numc/numc.h"
+#include "numc/internal/utils.h"
 
 static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b,
                                            const char *op_name) {

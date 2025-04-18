@@ -1,5 +1,5 @@
-#include "numc.h"
-#include "internal/utils.h"
+#include "numc/numc.h"
+#include "numc/internal/utils.h"
 
 ndarray_t *nc_slice(ndarray_t *array, slice_t *slices, int num_slices) {
     _GUARD(!array, "slice error: null array");

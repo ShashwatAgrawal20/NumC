@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "../core/ndarray.h"
+#include "ndarray.h"
 
 typedef struct {
     size_t start;

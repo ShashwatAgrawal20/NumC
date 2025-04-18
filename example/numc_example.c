@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "numc.h"
+#include "numc/numc.h"
 
 int main(void) {
     printf("NumC: A NumPy-like numerical computing library in C.\n");

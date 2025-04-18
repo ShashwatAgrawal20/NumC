@@ -1,6 +1,4 @@
-#include "ops/basic_ops.h"
-
-#include "core/ndarray.h"
+#include "numc.h"
 #include "internal/utils.h"
 
 static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b,

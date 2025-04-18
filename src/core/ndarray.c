@@ -1,4 +1,4 @@
-#include "core/ndarray.h"
+#include "numc.h"
 
 #include <assert.h>
 #include <math.h>

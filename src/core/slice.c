@@ -1,6 +1,4 @@
-#include "core/slice.h"
-
-#include "core/ndarray.h"
+#include "numc.h"
 #include "internal/utils.h"
 
 ndarray_t *nc_slice(ndarray_t *array, slice_t *slices, int num_slices) {

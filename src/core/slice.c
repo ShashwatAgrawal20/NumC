@@ -1,14 +1,14 @@
-#include "core/slice.h"
+#include "numc/core/slice.h"
 
-#include "core/ndarray.h"
-#include "internal/utils.h"
+#include "numc/core/ndarray.h"
+#include "numc/internal/utils.h"
 
 ndarray_t *nc_slice(ndarray_t *array, slice_t *slices, int num_slices) {
-    _GUARD(!array, "slice error: null array");
+    _GUARD(!array, "nc_slice error: null array");
     _GUARD(num_slices != array->ndim, "slice error: dimension mismatch");
 
     ndarray_t *view = nc_create(array->shape, array->ndim, array->dtype);
-    _GUARD(!view, "slice error: cannot create a view\n");
+    _GUARD(!view, "nc_slice error: cannot create a view\n");
     free(view->data);
     view->data = NULL;
     view->owns_data = false;

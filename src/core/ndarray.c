@@ -1,4 +1,4 @@
-#include "core/ndarray.h"
+#include "numc/core/ndarray.h"
 
 #include <assert.h>
 #include <math.h>
@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "internal/utils.h"
+#include "numc/internal/utils.h"
 
 /*******************************************************************************
                                PRIVATE FUNCTIONS
@@ -36,22 +36,6 @@ static inline size_t _dtype_size(dtype_t dtype) {
         default:
             _ELOG("_dtype_size error: invalid dtype (%d)\n", dtype);
             return 0;
-    }
-}
-
-static inline void _assign_value(void *ptr, double val, dtype_t dtype) {
-    switch (dtype) {
-        case nc_int:
-            *(int *)ptr = (int)val;
-            break;
-        case nc_float:
-            *(float *)ptr = (float)val;
-            break;
-        case nc_double:
-            *(double *)ptr = val;
-            break;
-        default:
-            _ELOG("_assign_value error: invalid dtype (%d)\n", dtype);
     }
 }
 
@@ -245,31 +229,6 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
     return array;
 }
 
-/**
- * @brief FUCK OFF CLANGD
- * Notes on `is_inline`:
- * Use `is_inline = true` ONLY when:
- *   * You're passing a temporary ndarray like `nc_arange(...)` directly into
- *     `nc_reshape(...)`, e.g.:
- *       nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
- *
- *   * Or you explicitly want to reshape in-place and understand that no new
- *     memory will be allocated.
- *
- * WARNING:
- * When `is_inline` is true, the reshaped array is the SAME pointer as the
- * original. This means:
- *   - Free only ONE of them — either the reshaped result or the original.
- *   - If you store both pointers, do not assume they're separate objects.
- *
- * 🚨 If you pass `is_inline=true` for an array stored in a **variable**
- *    (instead of a temporary), **it will be freed if an error occurs**. If
- *    there's no error, the reshape happens in-place.
- *
- * 🚨 **DO NOT** use `is_inline=true` on non-temporary arrays( unless you are
- *    100% sure you want the original array to be modified **AND** risk it being
- *    freed on failure.
- */
 ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
                       bool is_inline) {
     if (!array || ndim <= 0) {
@@ -330,16 +289,6 @@ defer:
     return NULL;
 }
 
-/**
- * Debug print for an ndarray_t struct.
- *
- * Parameters:
- *  * `array`: Pointer to the ndarray.
- *  * `print_data`: If true, prints data; else just metadata.
- *
- * Notes:
- *  * Data is printed as a 1D flat array.
- */
 void nc_display(ndarray_t *array, bool print_data) {
     if (!array) {
         // printf("(null array)\");

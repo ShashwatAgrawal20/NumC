@@ -2,3 +2,5 @@ numc_example
 .cache
 compile_commands.json
 vgcore*
+build/
+libnumc.a

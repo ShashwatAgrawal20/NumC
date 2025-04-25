@@ -1,23 +1,48 @@
+#include <stddef.h>
 #include <stdio.h>
 
-#include "numc.h"
+#include "numc/numc.h"
 
 int main(void) {
     printf("NumC: A NumPy-like numerical computing library in C.\n");
 
     {
-        ndarray_t *bs = nc_arange(1, 2, 1, nc_int);
-        nc_display(bs, true);
+        ndarray_t *bs =
+            nc_reshape(nc_arange(1, 7, 1, nc_int), SND_INLINE(2, 3), true);
+        ndarray_t *bs1 =
+            nc_reshape(nc_arange(1, 7, 1, nc_float), SND_INLINE(2, 3), true);
+        ndarray_t *bs2 =
+            nc_reshape(nc_arange(1, 7, 1, nc_double), SND_INLINE(2, 3), true);
+        ndarray_t *sall = nc_sum(bs, -1);
+        ndarray_t *sall1 = nc_sum(bs1, -1);
+        ndarray_t *sall2 = nc_sum(bs2, -1);
+
+        // nc_display(bs, true);
+        // nc_display(s0, true);
+        // nc_display(s1, true);
+        nc_display(sall, true);
+        nc_display(sall1, true);
+        nc_display(sall2, true);
+        // nc_free(&s0);
+        // nc_free(&s1);
+        nc_free(&sall);
+        nc_free(&sall1);
+        nc_free(&sall2);
         nc_free(&bs);
+        nc_free(&bs1);
+        nc_free(&bs2);
     }
+    return 0;
     {
         size_t shape[] = {2, 2, 2, 2};
         ndarray_t *original =
             nc_reshape(nc_arange(0, 16, 1, nc_double), SND(shape), true);
+        // nc_reshape(nc_arange(0, 16, 1, nc_double), SND_INLINE(2, 2, 2, 2),
+        //            true);
         nc_display(original, true);
         nc_free(&original);
     }
-    // return 0;
+    return 0;
 
     {
         size_t shape[] = {4, 5, 5};

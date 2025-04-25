@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include "numc/core/ndarray.h"
+
 #define _check_fail() goto defer
 
 #define _check_alloc(allocation)                                      \
@@ -32,4 +34,19 @@
         }                                 \
     } while (0)
 
+static inline void _assign_value(void *ptr, double val, dtype_t dtype) {
+    switch (dtype) {
+        case nc_int:
+            *(int *)ptr = (int)val;
+            break;
+        case nc_float:
+            *(float *)ptr = (float)val;
+            break;
+        case nc_double:
+            *(double *)ptr = val;
+            break;
+        default:
+            _ELOG("_assign_value error: invalid dtype (%d)\n", dtype);
+    }
+}
 #endif  // !UTILS_H

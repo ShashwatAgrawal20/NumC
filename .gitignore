@@ -3,4 +3,5 @@ numc_example
 compile_commands.json
 vgcore*
 build/
-libnumc.a
+gmon.out
+gprof_report.txt

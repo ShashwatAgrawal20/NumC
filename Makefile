@@ -1,8 +1,12 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -Iinclude -pg
+CFLAGS = -Wall -Wextra -pedantic -Iinclude
 TARGET = numc_example
 SRC = src/*/*.c
 EXAMPLE = example/numc_example.c
+
+ifeq ($(PROFILE), 1)
+    CFLAGS += -pg
+endif
 
 all: $(TARGET)
 

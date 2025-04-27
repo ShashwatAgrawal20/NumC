@@ -4,7 +4,7 @@ echo "Cleaning project..."
 make clean
 
 echo "Building project..."
-make
+make PROFILE=1
 
 if [ ! -f numc_example ]; then
   echo "Executable numc_example not found!"

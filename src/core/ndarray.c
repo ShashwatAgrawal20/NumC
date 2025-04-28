@@ -1,7 +1,6 @@
 #include "numc/core/ndarray.h"
 
 #include <assert.h>
-#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,20 +21,6 @@ static inline const char *_dtype_to_format(dtype_t type) {
             return "%lf";
         default:
             return NULL;
-    }
-}
-
-static inline size_t _dtype_size(dtype_t dtype) {
-    switch (dtype) {
-        case nc_int:
-            return sizeof(int);
-        case nc_float:
-            return sizeof(float);
-        case nc_double:
-            return sizeof(double);
-        default:
-            _ELOG("_dtype_size error: invalid dtype (%d)\n", dtype);
-            return 0;
     }
 }
 
@@ -206,27 +191,40 @@ void *nc_get(ndarray_t *array, size_t *indices) {
 ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
     _GUARD(step == 0.0, "nd_arange error: step cannot be zero.\n");
 
-    /*
-        TODO: I DON'T LIKE THIS CEIL SHIT CAUSE I'VE TO MANUALLY DO THAT LM SHIT
-        WHILE BUILDING AND PROBABLY WILL IMPLEMENT THIS WITH LOOPS AND STUFF
-        LATER.
-    */
-    size_t length = (size_t)ceil((stop - start) / step);
+    size_t length = (size_t)((stop - start) / step);
     if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
         length = 0;
     }
+
+#ifndef NC_ARANGE_INTERNAL_ASSIGN
+#define NC_ARANGE_INTERNAL_ASSIGN(DTYPE)      \
+    do {                                      \
+        DTYPE *data = (DTYPE *)array->data;   \
+        for (size_t i = 0; i < length; ++i) { \
+            data[i] = (DTYPE)value;           \
+            value += step;                    \
+        }                                     \
+    } while (0);
+#endif /* ifndef NC_ARANGE_INTERNAL_ASSIGN */
 
     size_t shape[1] = {length};
     ndarray_t *array = nc_create(shape, 1, dtype);
     _check_null_return(array);
 
-    for (size_t i = 0; i < length; ++i) {
-        void *element = (char *)array->data + i * array->item_size;
-        double value = start + i * step;
-
-        _assign_value(element, value, dtype);
+    double value = start;
+    switch (array->dtype) {
+        case nc_int:
+            NC_ARANGE_INTERNAL_ASSIGN(int);
+            break;
+        case nc_float:
+            NC_ARANGE_INTERNAL_ASSIGN(float);
+            break;
+        case nc_double:
+            NC_ARANGE_INTERNAL_ASSIGN(double);
+            break;
     }
     return array;
+#undef NC_ARANGE_INTERNAL_ASSIGN
 }
 
 ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,

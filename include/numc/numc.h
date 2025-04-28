@@ -5,10 +5,6 @@
 #include <numc/core/slice.h>
 #include <numc/ops/basic_ops.h>
 #include <numc/ops/reduction_ops.h>
-
-#define nc_dim_count(shape) (sizeof(shape) / sizeof((shape)[0]))
-#define SND(shape) shape, nc_dim_count(shape)
-#define SND_INLINE(...) \
-    ((size_t[]){__VA_ARGS__}), sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t)
+#include <numc/utils/macros.h>
 
 #endif  // !NUMC_H

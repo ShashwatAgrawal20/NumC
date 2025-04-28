@@ -49,4 +49,19 @@ static inline void _assign_value(void *ptr, double val, dtype_t dtype) {
             _ELOG("_assign_value error: invalid dtype (%d)\n", dtype);
     }
 }
+
+static inline size_t _dtype_size(dtype_t dtype) {
+    switch (dtype) {
+        case nc_int:
+            return sizeof(int);
+        case nc_float:
+            return sizeof(float);
+        case nc_double:
+            return sizeof(double);
+        default:
+            _ELOG("_dtype_size error: invalid dtype (%d)\n", dtype);
+            return 0;
+    }
+}
+
 #endif  // !UTILS_H

@@ -6,19 +6,25 @@
 #include "numc/internal/utils.h"
 #include "numc/utils/macros.h"
 
-ndarray_t *nc_sum(ndarray_t *array, int axis) {
+ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
     _GUARD((!array), "nc_sum error: invalid array input");
 
-    int effective_axis = axis;
-    if (axis < 0 && axis != -1) {
-        effective_axis = array->ndim + axis;
+    nc_sum_otps local_opts = *opts;
+    if (local_opts.dtype == NC_USE_ARRAY_DTYPE) {
+        local_opts.dtype = array->dtype;
     }
 
-    _GUARD(
-        (axis != -1 && (effective_axis < 0 || effective_axis >= array->ndim)),
-        "nc_sum error: axis %d out of bounds for ndim %d\n", axis, array->ndim);
+    int effective_axis = local_opts.axis;
+    if (local_opts.axis < 0 && opts->axis != -1) {
+        effective_axis = array->ndim + local_opts.axis;
+    }
 
-    if (axis == -1) {
+    _GUARD((local_opts.axis != -1 &&
+            (effective_axis < 0 || effective_axis >= array->ndim)),
+           "nc_sum error: axis %d out of bounds for ndim %d\n", local_opts.axis,
+           array->ndim);
+
+    if (local_opts.axis == -1) {
         double acc = 0.0;
 
 #define INTERNAL_NC_SUM_ALL(DTYPE)                   \

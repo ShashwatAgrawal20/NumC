@@ -3,6 +3,7 @@
 
 #include "numc/core/ndarray.h"
 
+#define NC_USE_ARRAY_DTYPE ((dtype_t) - 1)
 #define _check_fail() goto defer
 
 #define _check_alloc(allocation)                                      \

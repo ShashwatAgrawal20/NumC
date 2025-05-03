@@ -5,16 +5,30 @@ int main(void) {
     printf("NumC: A NumPy-like numerical computing library in C.\n");
 
     {
-        ndarray_t *test = nc_reshape(nc_arange(1, 100000001, 1, nc_double),
-                                     SND_INLINE(100, 100, 100, 100), true);
-        ndarray_t *sall = nc_sum(test, 3);
-        nc_display(test, false);
-        nc_display(sall, false);
+        // ndarray_t *test = nc_reshape(nc_arange(1, 100000001, 1, nc_double),
+        //                              SND_INLINE(100, 100, 100, 100), true);
+        ndarray_t *test =
+            nc_reshape(nc_arange(1, 9, 1, nc_float), SND_INLINE(2, 2, 2), true);
+
+        /* EXPLICIT SHIT */
+        nc_sum_otps *opts = NC_SUM_DEFAULT_OPTS();
+        opts->axis = 2;
+        ndarray_t *sa_explicit = nc_sum(test, opts);
+
+        /* VARIADIC */
+        ndarray_t *sa_variadic = nc_sum(test, NC_SUM_DEFAULT_OPTS(.axis = 2));
+
+        nc_display(test, true);
+        nc_display(sa_explicit, true);
+        nc_display(sa_variadic, true);
+
         nc_free(&test);
-        nc_free(&sall);
+        nc_free(&sa_explicit);
+        nc_free(&sa_variadic);
     }
 
     return 0;
+    /*
     {
         ndarray_t *bs =
             nc_reshape(nc_arange(1, 7, 1, nc_int), SND_INLINE(2, 3), true);
@@ -68,6 +82,7 @@ int main(void) {
         nc_free(&original);
         nc_free(&sliced);
     }
+    */
 
     /* nc_slice example */
     {

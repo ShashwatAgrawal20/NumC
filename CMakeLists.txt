@@ -25,6 +25,5 @@ target_link_libraries(numc_example PRIVATE numc)
 # Install instructions
 install(TARGETS numc DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include)
-install(TARGETS numc_example DESTINATION bin)
 
 include(CPack)

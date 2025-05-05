@@ -24,5 +24,5 @@ gprof numc_example gmon.out > gprof_report.txt
 
 echo "Performance report generated: gprof_report.txt"
 echo "Opening the report"
-sleep 1
+sleep 2
 nvim gprof_report.txt

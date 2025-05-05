@@ -1,3 +1,4 @@
+#define NUMC_DISABLE_OVERRIDE_INIT_WARNING
 #include <numc/numc.h>
 #include <stdio.h>
 

@@ -35,6 +35,24 @@
         }                                 \
     } while (0)
 
+#define DISPATCH_DTYPE_MACRO(MACRO, OPT_BODY, ...) \
+    do {                                           \
+        switch (array->dtype) {                    \
+            case nc_int:                           \
+                OPT_BODY;                          \
+                MACRO(int, __VA_ARGS__);           \
+                break;                             \
+            case nc_float:                         \
+                OPT_BODY;                          \
+                MACRO(float, __VA_ARGS__);         \
+                break;                             \
+            case nc_double:                        \
+                OPT_BODY;                          \
+                MACRO(double, __VA_ARGS__);        \
+                break;                             \
+        }                                          \
+    } while (0);
+
 static inline void _assign_value(void *ptr, double val, dtype_t dtype) {
     switch (dtype) {
         case nc_int:

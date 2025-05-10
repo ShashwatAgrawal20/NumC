@@ -1,4 +1,4 @@
-#define NUMC_DISABLE_OVERRIDE_INIT_WARNING
+#define NC_D_ORIW
 #include <numc/numc.h>
 #include <stdio.h>
 
@@ -9,7 +9,7 @@ int main(void) {
         // ndarray_t *test = nc_reshape(nc_arange(1, 100000001, 1, nc_double),
         //                              SND_INLINE(100, 100, 100, 100), true);
         ndarray_t *test =
-            nc_reshape(nc_arange(1, 9, 1, nc_float), SND_INLINE(2, 2, 2), true);
+            nc_reshape(nc_arange(1, 9, 1, nc_int), SND_INLINE(2, 2, 2), true);
 
         /* EXPLICIT SHIT */
         nc_sum_otps *opts = NC_SUM_DEFAULT_OPTS();
@@ -17,7 +17,8 @@ int main(void) {
         ndarray_t *sa_explicit = nc_sum(test, opts);
 
         /* VARIADIC */
-        ndarray_t *sa_variadic = nc_sum(test, NC_SUM_DEFAULT_OPTS(.axis = 2));
+        ndarray_t *sa_variadic =
+            nc_sum(test, NC_SUM_DEFAULT_OPTS(.axis = 1, .dtype = nc_double));
 
         nc_display(test, true);
         nc_display(sa_explicit, true);

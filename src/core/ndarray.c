@@ -26,7 +26,7 @@ static inline const char *_dtype_to_format(dtype_t type) {
 
 static inline void _nc_print_recursive(ndarray_t *array, int dim, size_t offset,
                                        int indent_level) {
-#define CAST_AND_PRINT_ELEMS(TYPE)                                          \
+#define CAST_AND_PRINT_ELEMS(TYPE, NULL)                                    \
     do {                                                                    \
         const char *format = _dtype_to_format((array->dtype));              \
         for (size_t i = 0; i < array->shape[dim]; ++i) {                    \
@@ -39,17 +39,7 @@ static inline void _nc_print_recursive(ndarray_t *array, int dim, size_t offset,
 
     if (dim == array->ndim - 1) {
         printf("%*s[", indent_level * 3, "");
-        switch (array->dtype) {
-            case nc_int:
-                CAST_AND_PRINT_ELEMS(int);
-                break;
-            case nc_float:
-                CAST_AND_PRINT_ELEMS(float);
-                break;
-            case nc_double:
-                CAST_AND_PRINT_ELEMS(double);
-                break;
-        }
+        DISPATCH_DTYPE_MACRO(CAST_AND_PRINT_ELEMS, NULL);
         printf("]");
     } else {
         printf("%*s[\n", indent_level * 3, "");
@@ -197,13 +187,13 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
     }
 
 #ifndef NC_ARANGE_INTERNAL_ASSIGN
-#define NC_ARANGE_INTERNAL_ASSIGN(DTYPE)      \
-    do {                                      \
-        DTYPE *data = (DTYPE *)array->data;   \
-        for (size_t i = 0; i < length; ++i) { \
-            data[i] = (DTYPE)value;           \
-            value += step;                    \
-        }                                     \
+#define NC_ARANGE_INTERNAL_ASSIGN(DTYPE, NULL) \
+    do {                                       \
+        DTYPE *data = (DTYPE *)array->data;    \
+        for (size_t i = 0; i < length; ++i) {  \
+            data[i] = (DTYPE)value;            \
+            value += step;                     \
+        }                                      \
     } while (0);
 #endif /* ifndef NC_ARANGE_INTERNAL_ASSIGN */
 
@@ -212,17 +202,7 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
     _check_null_return(array);
 
     double value = start;
-    switch (array->dtype) {
-        case nc_int:
-            NC_ARANGE_INTERNAL_ASSIGN(int);
-            break;
-        case nc_float:
-            NC_ARANGE_INTERNAL_ASSIGN(float);
-            break;
-        case nc_double:
-            NC_ARANGE_INTERNAL_ASSIGN(double);
-            break;
-    }
+    DISPATCH_DTYPE_MACRO(NC_ARANGE_INTERNAL_ASSIGN, NULL);
     return array;
 #undef NC_ARANGE_INTERNAL_ASSIGN
 }

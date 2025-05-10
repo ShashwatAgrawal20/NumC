@@ -7,7 +7,7 @@
 #include <numc/ops/reduction_ops.h>
 #include <numc/utils/macros.h>
 
-#ifdef NUMC_DISABLE_OVERRIDE_INIT_WARNING
+#ifdef NC_D_ORIW
 #pragma GCC diagnostic ignored "-Woverride-init"
 #endif
 

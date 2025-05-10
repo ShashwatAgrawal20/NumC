@@ -27,28 +27,17 @@ ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
     if (local_opts.axis == -1) {
         double acc = 0.0;
 
-#define INTERNAL_NC_SUM_ALL(DTYPE)                   \
+#define INTERNAL_NC_SUM_ALL(DTYPE, NO_NEED)          \
     for (size_t i = 0; i < array->total_size; ++i) { \
         acc += ((DTYPE *)array->data)[i];            \
     }
 
-        switch (array->dtype) {
-            case nc_int:
-                INTERNAL_NC_SUM_ALL(int);
-                break;
-            case nc_float:
-                INTERNAL_NC_SUM_ALL(float);
-                break;
-            case nc_double:
-                INTERNAL_NC_SUM_ALL(double);
-                break;
-        }
-#undef INTERNAL_NC_SUM_ALL
+        DISPATCH_DTYPE_MACRO(INTERNAL_NC_SUM_ALL, NULL);
 
-        ndarray_t *result = nc_create(SND_INLINE(1), array->dtype);
+        ndarray_t *result = nc_create(SND_INLINE(1), local_opts.dtype);
         _GUARD(!result, "nc_sum error: cannot create output array\n");
 
-        _assign_value(result->data, acc, array->dtype);
+        _assign_value(result->data, acc, local_opts.dtype);
         return result;
     }
 
@@ -59,7 +48,7 @@ ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
             new_shape[new_dim_idx++] = array->shape[i];
         }
     }
-    ndarray_t *result = nc_create(SND(new_shape), array->dtype);
+    ndarray_t *result = nc_create(SND(new_shape), local_opts.dtype);
     _GUARD(!result, "nc_sum error: cannot create output array\n");
 
     size_t outer_dims_size = 1;
@@ -74,10 +63,10 @@ ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
 
     size_t axis_size = array->shape[effective_axis];
 
-#define SUM_ALONG_AXIS(DTYPE)                                          \
+#define SUM_ALONG_AXIS(DTYPE, DST_DTYPE)                               \
     do {                                                               \
         DTYPE *src_data = (DTYPE *)array->data;                        \
-        DTYPE *dst_data = (DTYPE *)result->data;                       \
+        DST_DTYPE *dst_data = (DST_DTYPE *)result->data;               \
                                                                        \
         for (size_t i = 0; i < outer_dims_size; ++i) {                 \
             for (size_t j = 0; j < inner_dims_size; ++j) {             \
@@ -90,19 +79,21 @@ ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
                 }                                                      \
             }                                                          \
         }                                                              \
-    } while (0)
+    } while (0);
 
-    switch (array->dtype) {
+    switch (local_opts.dtype) {
         case nc_int:
-            SUM_ALONG_AXIS(int);
+            DISPATCH_DTYPE_MACRO(SUM_ALONG_AXIS, ;, int);
             break;
         case nc_float:
-            SUM_ALONG_AXIS(float);
+            DISPATCH_DTYPE_MACRO(SUM_ALONG_AXIS, ;, float);
             break;
         case nc_double:
-            SUM_ALONG_AXIS(double);
+            DISPATCH_DTYPE_MACRO(SUM_ALONG_AXIS, ;, double);
             break;
     }
+
 #undef SUM_ALONG_AXIS
+#undef INTERNAL_NC_SUM_ALL
     return result;
 }

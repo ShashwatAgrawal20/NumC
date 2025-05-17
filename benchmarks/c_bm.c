@@ -11,9 +11,9 @@ int main(void) {
         ndarray_t *array = nc_reshape(nc_arange(1, 100000001, 1, nc_double),
                                       SND_INLINE(100, 100, 100, 100), true);
 
-        nc_sum_otps opts = NC_SUM_DEFAULT_OPTS();
-        opts.axis = 3;
-        ndarray_t *s3 = nc_sum(array, &opts);
+        nc_sum_otps *opts = NC_SUM_DEFAULT_OPTS();
+        opts->axis = 3;
+        ndarray_t *s3 = nc_sum(array, opts);
         nc_free(&array);
         nc_free(&s3);
         end = clock();

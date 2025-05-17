@@ -27,16 +27,24 @@ ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
     if (local_opts.axis == -1) {
         double acc = 0.0;
 
-#define INTERNAL_NC_SUM_ALL(DTYPE, NO_NEED)          \
-    for (size_t i = 0; i < array->total_size; ++i) { \
-        acc += ((DTYPE *)array->data)[i];            \
-    }
-
-        DISPATCH_DTYPE_MACRO(INTERNAL_NC_SUM_ALL, NULL);
+#define INTERNAL_NC_SUM_ALL(DTYPE, _)                                          \
+    do {                                                                       \
+        size_t hehe = 0;                                                       \
+        size_t limit = array->total_size - (array->total_size % 4);            \
+        DTYPE *data = (DTYPE *)array->data;                                    \
+        for (; hehe < limit; hehe += 4) {                                      \
+            acc +=                                                             \
+                data[hehe] + data[hehe + 1] + data[hehe + 2] + data[hehe + 3]; \
+        }                                                                      \
+        for (; hehe < array->total_size; ++hehe) {                             \
+            acc += data[hehe];                                                 \
+        }                                                                      \
+    } while (0)
 
         ndarray_t *result = nc_create(SND_INLINE(1), local_opts.dtype);
         _GUARD(!result, "nc_sum error: cannot create output array\n");
 
+        DISPATCH_DTYPE_MACRO(INTERNAL_NC_SUM_ALL, NULL);
         _assign_value(result->data, acc, local_opts.dtype);
         return result;
     }

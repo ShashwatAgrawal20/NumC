@@ -26,7 +26,7 @@ static inline const char *_dtype_to_format(dtype_t type) {
 
 static inline void _nc_print_recursive(ndarray_t *array, int dim, size_t offset,
                                        int indent_level) {
-#define CAST_AND_PRINT_ELEMS(TYPE, NULL)                                    \
+#define CAST_AND_PRINT_ELEMS(TYPE, _)                                       \
     do {                                                                    \
         const char *format = _dtype_to_format((array->dtype));              \
         for (size_t i = 0; i < array->shape[dim]; ++i) {                    \
@@ -187,13 +187,13 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
     }
 
 #ifndef NC_ARANGE_INTERNAL_ASSIGN
-#define NC_ARANGE_INTERNAL_ASSIGN(DTYPE, NULL) \
-    do {                                       \
-        DTYPE *data = (DTYPE *)array->data;    \
-        for (size_t i = 0; i < length; ++i) {  \
-            data[i] = (DTYPE)value;            \
-            value += step;                     \
-        }                                      \
+#define NC_ARANGE_INTERNAL_ASSIGN(DTYPE, _)   \
+    do {                                      \
+        DTYPE *data = (DTYPE *)array->data;   \
+        for (size_t i = 0; i < length; ++i) { \
+            data[i] = (DTYPE)value;           \
+            value += step;                    \
+        }                                     \
     } while (0);
 #endif /* ifndef NC_ARANGE_INTERNAL_ASSIGN */
 

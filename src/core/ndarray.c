@@ -24,6 +24,11 @@ static inline const char *_dtype_to_format(dtype_t type) {
     }
 }
 
+/* TODO:- THIS SHIT IS GARBAGE.
+ * If the array is big, show the start, show the end, and cut the crap in the
+ * middle. write to it like someone who's used a profiler before Fix it.
+ * It's ugly, it's slow, and it's dumb.
+ */
 static inline void _nc_print_recursive(ndarray_t *array, int dim, size_t offset,
                                        int indent_level) {
 #define CAST_AND_PRINT_ELEMS(TYPE, _)                                       \
@@ -107,15 +112,6 @@ ndarray_t *nc_create(size_t *shape, int ndim, dtype_t dtype) {
     array->ndim = ndim;
     _compute_total_size(array);
     _compute_strides(array);
-    // array->total_size = 1;
-    // array->strides[ndim - 1] = dtype_size;
-
-    // for (int i = ndim - 1; i >= 0; --i) {
-    //     array->total_size *= shape[i];
-    //     if (i > 0) {
-    //         array->strides[i - 1] = array->strides[i] * shape[i];
-    //     }
-    // }
 
     array->data = calloc(array->total_size, dtype_size);
     _check_alloc(array->data);
@@ -226,10 +222,6 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
         _check_fail();
     }
 
-    /*
-     * TODO: this internal computation shit is getting ugly might make different
-     * utility functions so that those will be used by both nc_create and here.
-     */
     if (is_inline) {
         if (array->ndim != ndim) {
             size_t *new_shape = realloc(array->shape, ndim * sizeof(size_t));

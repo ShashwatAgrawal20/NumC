@@ -1,6 +1,6 @@
 #include "numc/ops/reduction_ops.h"
 
-#include <string.h>
+#include <numc/pch.h>
 
 #include "numc/core/ndarray.h"
 #include "numc/internal/utils.h"

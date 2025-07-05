@@ -1,13 +1,132 @@
+#include "numc/internal/broadcast.h"
 #define NC_D_ORIW
 #include <numc/numc.h>
-#include <stdio.h>
+#include <numc/pch.h>
 
 int main(void) {
     printf("NumC: A NumPy-like numerical computing library in C.\n");
+    /* FOR SINGLE DIMENSION */
+    {
+        // ndarray_t *a =
+        //     nc_reshape(nc_arange(0, 3, 1, nc_double), SND_INLINE(3), true);
+        // ndarray_t *b =
+        //     nc_reshape(nc_arange(0, 6, 1, nc_double), SND_INLINE(2, 3),
+        //     true);
+        //
+        // printf("nc_add -> ");
+        // ndarray_t *c = nc_add(a, b);
+
+        ndarray_t *a = nc_reshape(nc_arange(1, 7, 1, nc_double),
+                                  SND_INLINE(2, 1, 3), true);
+
+        // Create array b with shape (1,4,1)
+        ndarray_t *b = nc_reshape(nc_arange(7, 11, 1, nc_double),
+                                  SND_INLINE(1, 4, 1), true);
+
+        printf("Array a shape: (2,1,3)\n");
+        printf("Array b shape: (1,4,1)\n");
+
+        // This should broadcast to result shape (2,4,3)
+        ndarray_t *c = nc_add(a, b);
+        printf("Result shape should be: (2,4,3)\n");
+
+        nc_display(a, true);
+        nc_display(b, true);
+        nc_display(c, true);
+        nc_free(&a);
+        nc_free(&b);
+        nc_free(&c);
+    }
+
+    return 0;
 
     {
-        // ndarray_t *test = nc_reshape(nc_arange(1, 100000001, 1, nc_double),
-        //                              SND_INLINE(100, 100, 100, 100), true);
+        /* VALID */
+        {
+            {
+                ndarray_t *a =
+                    nc_reshape(nc_arange(0, 3, 1, nc_int), SND_INLINE(3), true);
+                ndarray_t *b = nc_reshape(nc_arange(0, 3, 1, nc_int),
+                                          SND_INLINE(1, 3), true);
+                // Result shape: (1, 3) => broadcast to (1, 3)
+                printf("%d\n", nc_can_broadcast(NULL, NULL));
+                nc_free(&a);
+                nc_free(&b);
+            }
+
+            {
+                ndarray_t *a =
+                    nc_reshape(nc_arange(0, 3, 1, nc_int), SND_INLINE(3), true);
+                ndarray_t *b =
+                    nc_reshape(nc_arange(0, 1, 1, nc_int), SND_INLINE(1), true);
+                // b acts like scalar => broadcast to (3)
+                printf("%d\n", nc_can_broadcast(a, b));
+                nc_free(&a);
+                nc_free(&b);
+            }
+            {
+                ndarray_t *a = nc_reshape(nc_arange(0, 6, 1, nc_int),
+                                          SND_INLINE(2, 3), true);
+                ndarray_t *b = nc_reshape(nc_arange(0, 3, 1, nc_int),
+                                          SND_INLINE(1, 3), true);
+                // b broadcast to (2, 3)
+                printf("%d\n", nc_can_broadcast(a, b));
+                nc_free(&a);
+                nc_free(&b);
+            }
+            {
+                ndarray_t *a = nc_reshape(nc_arange(0, 2, 1, nc_float),
+                                          SND_INLINE(2, 1, 1), true);
+                ndarray_t *b = nc_reshape(nc_arange(0, 6, 1, nc_float),
+                                          SND_INLINE(1, 3, 2), true);
+                // broadcast to (2, 3, 2)
+                printf("%d\n", nc_can_broadcast(a, b));
+                nc_free(&a);
+                nc_free(&b);
+            }
+            {
+                ndarray_t *a = nc_reshape(nc_arange(0, 3, 1, nc_double),
+                                          SND_INLINE(3), true);
+                ndarray_t *b = nc_reshape(nc_arange(0, 6, 1, nc_double),
+                                          SND_INLINE(2, 3), true);
+                // ndim mismatch: can't broadcast (3) with (2,3)
+                printf("%d\n", nc_can_broadcast(a, b));
+                nc_free(&a);
+                nc_free(&b);
+            }
+        }
+        /* INVALID */
+        {
+            {
+                ndarray_t *a = nc_reshape(nc_arange(0, 4, 1, nc_int),
+                                          SND_INLINE(2, 2), true);
+                ndarray_t *b =
+                    nc_reshape(nc_arange(0, 3, 1, nc_int), SND_INLINE(3), true);
+                // Shape mismatch at axis 1 (2 vs 3)
+                printf("%d\n", nc_can_broadcast(a, b));
+                nc_free(&a);
+                nc_free(&b);
+            }
+            {
+                ndarray_t *a = nc_reshape(nc_arange(0, 6, 1, nc_float),
+                                          SND_INLINE(2, 3), true);
+                ndarray_t *b = nc_reshape(nc_arange(0, 3, 1, nc_float),
+                                          SND_INLINE(3, 1), true);
+                // Incompatible shapes: (2, 3) vs (3, 1)
+                printf("%d\n", nc_can_broadcast(a, b));
+                nc_free(&a);
+                nc_free(&b);
+            }
+        }
+    }
+
+    return 0;
+
+    {
+        // ndarray_t *test = nc_reshape(nc_arange(1, 100000001, 1,
+        // nc_double),
+        //                              SND_INLINE(100, 100, 100, 100),
+        //                              true);
         ndarray_t *test =
             nc_reshape(nc_arange(1, 9, 1, nc_int), SND_INLINE(2, 2, 2), true);
 
@@ -33,14 +152,12 @@ int main(void) {
     /*
     {
         ndarray_t *bs =
-            nc_reshape(nc_arange(1, 7, 1, nc_int), SND_INLINE(2, 3), true);
-        ndarray_t *bs1 =
-            nc_reshape(nc_arange(1, 13, 1, nc_int), SND_INLINE(4, 3), true);
-        ndarray_t *bs2 =
-            nc_reshape(nc_arange(1, 7, 1, nc_int), SND_INLINE(2, 3), true);
-        ndarray_t *sall = nc_sum(bs, -1);
-        ndarray_t *sall1 = nc_sum(bs1, 0);
-        ndarray_t *sall2 = nc_sum(bs2, -1);
+            nc_reshape(nc_arange(1, 7, 1, nc_int), SND_INLINE(2, 3),
+    true); ndarray_t *bs1 = nc_reshape(nc_arange(1, 13, 1, nc_int),
+    SND_INLINE(4, 3), true); ndarray_t *bs2 = nc_reshape(nc_arange(1, 7,
+    1, nc_int), SND_INLINE(2, 3), true); ndarray_t *sall = nc_sum(bs,
+    -1); ndarray_t *sall1 = nc_sum(bs1, 0); ndarray_t *sall2 =
+    nc_sum(bs2, -1);
 
         // nc_display(bs, true);
         // nc_display(s0, true);
@@ -62,8 +179,10 @@ int main(void) {
     {
         size_t shape[] = {2, 2, 2, 2};
         ndarray_t *original =
-            nc_reshape(nc_arange(0, 16, 1, nc_double), SND(shape), true);
-        // nc_reshape(nc_arange(0, 16, 1, nc_double), SND_INLINE(2, 2, 2, 2),
+            nc_reshape(nc_arange(0, 16, 1, nc_double), SND(shape),
+    true);
+        // nc_reshape(nc_arange(0, 16, 1, nc_double), SND_INLINE(2, 2,
+    2, 2),
         // true);
         nc_display(original, true);
         nc_free(&original);
@@ -130,7 +249,9 @@ int main(void) {
         if (retrieved) {
             printf("nc_get -> %f\n", *(float *)retrieved);
         } else {
-            printf("nc_get failed: index out of bounds or invalid access.\n");
+            printf(
+                "nc_get failed: index out of bounds or invalid "
+                "access.\n");
         }
         for (int i = 0; i < NUM_OF_ARRAYS; ++i) {
             nc_free(&arrays[i]);
@@ -160,8 +281,8 @@ int main(void) {
         nc_display(fucking_trying_arange_int, true);
         ndarray_t *hehe_1 =
             nc_reshape(nc_arange(0, 12, 1, nc_int), shape, 2, true);
-        /* IF YOU'RE DOING SHIT LIKE THIS JUST DON'T USE THE ANOTHER ARRAY
-         IN
+        /* IF YOU'RE DOING SHIT LIKE THIS JUST DON'T USE THE ANOTHER
+         ARRAY IN
          * ANY CASE THAT WILL CAUSE UNCONDITIONAL SHIT AND STUFF.
             // nc_display(fucking_trying_arange_int, true);
             // nc_free(&fucking_trying_arange_int);
@@ -244,7 +365,8 @@ int main(void) {
                                            nc_dim_count(shape), true);
             // ndarray_t *hehe_2 = nc_reshape(nc_arange(10, 20, 1, nc_int),
             // shape,
-            //                                nc_dim_count(shape), true);
+            //                                nc_dim_count(shape),
+            //                                true);
             ndarray_t *hehe_3 = nc_div(hehe_1, hehe_2);
             printf("nc_div -> ");
             nc_display(hehe_3, true);

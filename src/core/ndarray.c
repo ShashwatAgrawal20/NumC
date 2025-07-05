@@ -1,9 +1,6 @@
 #include "numc/core/ndarray.h"
 
-#include <assert.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include <numc/pch.h>
 
 #include "numc/internal/utils.h"
 
@@ -278,7 +275,6 @@ void nc_display(ndarray_t *array, bool print_data) {
     printf("  dtype: %d\n", array->dtype);
     printf("  total_size: %zu\n", array->total_size);
     printf("  item_size: %zu\n", array->item_size);
-    /* AS OF NOW THIS SHIT WILL ONLY DISPALY DATA AS A 1D ARRAY BTW */
     if (!print_data) {
         printf("  data: [ WE DON'T NEED TO SEE THAT ]\n\n");
     } else {

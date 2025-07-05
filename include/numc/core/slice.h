@@ -1,7 +1,7 @@
 #ifndef SLICE_H
 #define SLICE_H
 
-#include <stddef.h>
+#include <numc/pch.h>
 
 #include "ndarray.h"
 

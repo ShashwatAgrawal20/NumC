@@ -1,9 +1,7 @@
 #ifndef NDARRAY_H
 #define NDARRAY_H
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <numc/pch.h>
 
 typedef enum { nc_int, nc_float, nc_double } dtype_t;
 

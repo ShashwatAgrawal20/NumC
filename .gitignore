@@ -6,3 +6,4 @@ build/
 gmon.out
 gprof_report.txt
 c_benchmark
+build

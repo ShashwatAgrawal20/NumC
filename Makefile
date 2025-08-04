@@ -24,7 +24,7 @@ TEST_RUNNER_BIN = $(TESTDIR)/test_runner
 SRC_FILES := $(wildcard $(SRCDIR)/*/*.c)
 EXAMPLE_SRC = $(EXAMPLEDIR)/numc_example.c
 BENCHMARK_SRC = $(BENCHDIR)/c_bm.c
-TEST_SRC := $(shell find $(TESTDIR) -name '*_test.c')
+TEST_SRC := $(shell find $(TESTDIR) -name '*.c')
 
 # Object files
 OBJ_FILES := $(patsubst %.c, $(BUILDDIR)/%.o, $(SRC_FILES))
@@ -62,28 +62,16 @@ run_benchmark: $(BENCHMARK_TARGET)
 	@echo "=== Python Benchmark ==="
 	@python $(BENCHDIR)/py_bm.py
 
-# Generate test runner source from test files
-$(TEST_RUNNER_SRC): $(TEST_SRC)
-	@echo 'Generating test runner...'
-	@echo '#include "../tec.h"' > $@
-	@for file in $(TEST_SRC); do \
-		basename=$$(basename $$file); \
-		echo "#include \"$$basename\"" >> $@; \
-	done
-	@echo 'TEC_MAIN()' >> $@
-
-# Build and run tests
 test: $(TEST_RUNNER_BIN)
 	@./$(TEST_RUNNER_BIN)
-	@rm -f $(TEST_RUNNER_BIN)
 
 # Build test runner binary
-$(TEST_RUNNER_BIN): $(TEST_RUNNER_SRC) $(OBJ_FILES) $(TEST_OBJ)
+$(TEST_RUNNER_BIN): $(OBJ_FILES) $(TEST_OBJ)
 	$(CC) $(CFLAGS) -Iinclude -o $@ $^ $(LDFLAGS)
 
 # Clean everything
 clean:
-	rm -rf $(BUILDDIR) $(TARGET) $(BENCHMARK_TARGET) $(TEST_RUNNER_SRC) $(TEST_RUNNER_BIN)
+	rm -rf $(BUILDDIR) $(TARGET) $(BENCHMARK_TARGET) $(TEST_RUNNER_BIN)
 
 # Show help
 help:

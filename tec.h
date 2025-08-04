@@ -14,6 +14,12 @@
 #define TEC_CYAN "\033[36m"
 #define TEC_RESET "\033[0m"
 
+#ifndef TEC_MAX_TESTS
+#define TEC_MAX_TESTS 1024
+#endif
+#define TEC_MAX_FAILURE_MESSAGE_LEN 512
+#define TEC_TMP_STRBUF_LEN 32
+
 typedef void (*tec_func_t)(void);
 
 typedef struct {
@@ -22,10 +28,32 @@ typedef struct {
     tec_func_t func;
 } tec_entry_t;
 
+typedef struct {
+    int total_tests;
+    int passed_tests;
+    int failed_tests;
+    int total_assertions;
+    int passed_assertions;
+    int failed_assertions;
+} tec_stats_t;
+
+void tec_register(const char* name, const char* file, tec_func_t func);
+int tec_run_all(void);
+
+extern tec_stats_t tec_stats;
+extern char tec_failure_message[];
+extern tec_entry_t* tec_registry;
+extern int tec_count;
+extern int tec_capacity;
+extern int tec_current_passed;
+extern int tec_current_failed;
+extern jmp_buf tec_jump_buffer;
+extern int tec_jump_set;
+
 /*
  * keep TEC_FORMAT_SPEC and TEC_FORMAT_VALUE split to avoid -Wformat issues
- * I tried snprintf-style macro caused bogus format warnings on the LSP side,
- * splitting format and value avoids LSP noise and keeps type safety.
+ * I tried snprintf-style macro but, it caused bogus format warnings on the LSP
+ * side, splitting format and value avoids LSP noise and keeps type safety.
  * default case now uses (const void *)&x to bypass int-to-pointer-size
  * warnings.
  */
@@ -61,42 +89,6 @@ typedef struct {
         char*: (x),          \
         default: (const void*)&(x))  // avoids int-to-pointer warning
 
-#define TEC_MAX_TESTS 1024
-#define TEC_MAX_FAILURE_MESSAGE_LEN 512
-#define TEC_TMP_STRBUF_LEN 32
-static char tec_failure_message[TEC_MAX_FAILURE_MESSAGE_LEN];
-static tec_entry_t tec_registry[TEC_MAX_TESTS];
-static int tec_count = 0;
-static int tec_current_passed = 0;
-static int tec_current_failed = 0;
-static jmp_buf tec_jump_buffer;
-static int tec_jump_set = 0;
-
-typedef struct {
-    int total_tests;
-    int passed_tests;
-    int failed_tests;
-    int total_assertions;
-    int passed_assertions;
-    int failed_assertions;
-} tec_stats_t;
-
-static tec_stats_t tec_stats = {0};
-
-static void tec_register(const char* name, const char* file, tec_func_t func) {
-    if (!name || !file || !func) {
-        fprintf(stderr,
-                TEC_RED "Error: NULL argument to tec_register\n" TEC_RESET);
-        return;
-    }
-    if (tec_count < TEC_MAX_TESTS) {
-        tec_registry[tec_count].name = name;
-        tec_registry[tec_count].file = file;
-        tec_registry[tec_count].func = func;
-        tec_count++;
-    }
-}
-
 #define TEC_ASSERT(condition)                                          \
     do {                                                               \
         tec_stats.total_assertions++;                                  \
@@ -106,12 +98,9 @@ static void tec_register(const char* name, const char* file, tec_func_t func) {
                      "    " TEC_RED "✗" TEC_RESET                      \
                      " Assertion failed: %s (line %d)\n",              \
                      #condition, __LINE__);                            \
-            tec_current_failed++;                                      \
-            tec_stats.failed_assertions++;                             \
-            if (tec_jump_set) longjmp(tec_jump_buffer, 1);             \
+            TEC_POST_FAIL();                                           \
         } else {                                                       \
-            tec_current_passed++;                                      \
-            tec_stats.passed_assertions++;                             \
+            TEC_POST_PASS();                                           \
         }                                                              \
     } while (0)
 
@@ -131,12 +120,9 @@ static void tec_register(const char* name, const char* file, tec_func_t func) {
                      "    " TEC_RED "✗" TEC_RESET                      \
                      " Expected %s == %s, got %s != %s (line %d)\n",   \
                      #a, #b, a_str, b_str, __LINE__);                  \
-            tec_current_failed++;                                      \
-            tec_stats.failed_assertions++;                             \
-            if (tec_jump_set) longjmp(tec_jump_buffer, 1);             \
+            TEC_POST_FAIL();                                           \
         } else {                                                       \
-            tec_current_passed++;                                      \
-            tec_stats.passed_assertions++;                             \
+            TEC_POST_PASS();                                           \
         }                                                              \
     } while (0)
 
@@ -153,12 +139,9 @@ static void tec_register(const char* name, const char* file, tec_func_t func) {
                      "    " TEC_RED "✗" TEC_RESET                       \
                      " Expected %s != %s, but both are %s (line %d)\n", \
                      #a, #b, a_str, __LINE__);                          \
-            tec_current_failed++;                                       \
-            tec_stats.failed_assertions++;                              \
-            if (tec_jump_set) longjmp(tec_jump_buffer, 1);              \
+            TEC_POST_FAIL();                                            \
         } else {                                                        \
-            tec_current_passed++;                                       \
-            tec_stats.passed_assertions++;                              \
+            TEC_POST_PASS();                                            \
         }                                                               \
     } while (0)
 
@@ -181,12 +164,9 @@ static void tec_register(const char* name, const char* file, tec_func_t func) {
                      "    " TEC_RED "✗" TEC_RESET                              \
                      " Expected strings equal: \"%s\" != \"%s\" (line %d)\n",  \
                      (_a), (_b), __LINE__);                                    \
-            tec_current_failed++;                                              \
-            tec_stats.failed_assertions++;                                     \
-            if (tec_jump_set) longjmp(tec_jump_buffer, 1);                     \
+            TEC_POST_FAIL();                                                   \
         } else {                                                               \
-            tec_current_passed++;                                              \
-            tec_stats.passed_assertions++;                                     \
+            TEC_POST_PASS();                                                   \
         }                                                                      \
     } while (0)
 
@@ -199,12 +179,9 @@ static void tec_register(const char* name, const char* file, tec_func_t func) {
                      "    " TEC_RED "✗" TEC_RESET                      \
                      " Expected %s to be NULL, got %p (line %d)\n",    \
                      #ptr, (void*)(_ptr), __LINE__);                   \
-            tec_current_failed++;                                      \
-            tec_stats.failed_assertions++;                             \
-            if (tec_jump_set) longjmp(tec_jump_buffer, 1);             \
+            TEC_POST_FAIL();                                           \
         } else {                                                       \
-            tec_current_passed++;                                      \
-            tec_stats.passed_assertions++;                             \
+            TEC_POST_PASS();                                           \
         }                                                              \
     } while (0)
 
@@ -217,12 +194,9 @@ static void tec_register(const char* name, const char* file, tec_func_t func) {
                      "    " TEC_RED "✗" TEC_RESET                      \
                      " Expected %s to not be NULL (line %d)\n",        \
                      #ptr, __LINE__);                                  \
-            tec_current_failed++;                                      \
-            tec_stats.failed_assertions++;                             \
-            if (tec_jump_set) longjmp(tec_jump_buffer, 1);             \
+            TEC_POST_FAIL();                                           \
         } else {                                                       \
-            tec_current_passed++;                                      \
-            tec_stats.passed_assertions++;                             \
+            TEC_POST_PASS();                                           \
         }                                                              \
     } while (0)
 
@@ -233,7 +207,60 @@ static void tec_register(const char* name, const char* file, tec_func_t func) {
     }                                                                         \
     static void tec_##test_name(void)
 
-static void tec_print_test_result(const char* test_name, int failed) {
+#define TEC_POST_FAIL()                                \
+    do {                                               \
+        tec_current_failed++;                          \
+        tec_stats.failed_assertions++;                 \
+        if (tec_jump_set) longjmp(tec_jump_buffer, 1); \
+    } while (0);
+
+#define TEC_POST_PASS()                \
+    do {                               \
+        tec_current_passed++;          \
+        tec_stats.passed_assertions++; \
+    } while (0);
+
+#ifdef TEC_IMPLEMENTATION
+char tec_failure_message[TEC_MAX_FAILURE_MESSAGE_LEN];
+tec_entry_t* tec_registry = NULL;
+int tec_count = 0;
+int tec_capacity = 0;
+int tec_current_passed = 0;
+int tec_current_failed = 0;
+jmp_buf tec_jump_buffer;
+int tec_jump_set = 0;
+tec_stats_t tec_stats = {0};
+
+void tec_register(const char* name, const char* file, tec_func_t func) {
+    if (!name || !file || !func) {
+        fprintf(stderr,
+                TEC_RED "Error: NULL argument to tec_register\n" TEC_RESET);
+        return;
+    }
+
+    if (tec_count >= tec_capacity) {
+        tec_capacity = tec_capacity == 0 ? 8 : tec_capacity * 2;
+        tec_entry_t* new_registry =
+            realloc(tec_registry, tec_capacity * sizeof(tec_entry_t));
+
+        if (new_registry == NULL) {
+            fprintf(stderr, TEC_RED
+                    "Error: Failed to allocate memory for test "
+                    "registry\n" TEC_RESET);
+            free(tec_registry);
+            exit(1);
+        }
+
+        tec_registry = new_registry;
+    }
+
+    tec_registry[tec_count].name = name;
+    tec_registry[tec_count].file = file;
+    tec_registry[tec_count].func = func;
+    tec_count++;
+}
+
+void tec_print_test_result(const char* test_name, int failed) {
     if (failed == 0) {
         printf("  " TEC_GREEN "✓" TEC_RESET " %s \n", test_name);
     } else {
@@ -246,26 +273,29 @@ static void tec_print_test_result(const char* test_name, int failed) {
     }
 }
 
-static inline int tec_run_all(void) {
+int tec_run_all(void) {
     printf(TEC_BLUE "================================\n");
     printf("         C Test Runner          \n");
     printf("================================" TEC_RESET "\n\n");
 
+    int result = 0;
     const char* current_file = NULL;
 
     for (int i = 0; i < tec_count; ++i) {
-        const char* filename;
         if (current_file == NULL ||
             strcmp(current_file, tec_registry[i].file) != 0) {
             current_file = tec_registry[i].file;
-            filename = strrchr(current_file, '/');
-            if (filename)
-                filename++;
-            else
-                filename = current_file;
+            const char* display_name = current_file;
+            const char* prefix_to_strip = "tests/";
+            const size_t prefix_to_strip_len = strlen(prefix_to_strip);
+
+            if (strncmp(display_name, prefix_to_strip, prefix_to_strip_len) ==
+                0) {
+                display_name += prefix_to_strip_len;
+            }
 
             if (i > 0) printf("\n");
-            printf(TEC_MAGENTA "%s" TEC_RESET "\n", filename);
+            printf(TEC_MAGENTA "%s" TEC_RESET "\n", display_name);
         }
 
         tec_current_passed = 0;
@@ -299,14 +329,21 @@ static inline int tec_run_all(void) {
 
     if (tec_stats.failed_tests == 0) {
         printf("\n" TEC_GREEN "All tests passed!" TEC_RESET "\n");
-        return 0;
+        result = 0;
     } else {
         printf("\n" TEC_RED "Some tests failed!" TEC_RESET "\n");
-        return 1;
+        result = 1;
     }
+
+    free(tec_registry);
+    tec_registry = NULL;
+    tec_count = 0;
+    tec_capacity = 0;
+    return result;
 }
 
 #define TEC_MAIN() \
     int main(void) { return tec_run_all(); }
 
+#endif  // TEC_IMPLEMENTATION
 #endif  // TEC_H

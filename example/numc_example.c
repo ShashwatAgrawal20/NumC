@@ -5,6 +5,24 @@
 
 int main(void) {
     printf("NumC: A NumPy-like numerical computing library in C.\n");
+
+    {
+        ndarray_t *A =
+            nc_reshape(nc_arange(0, 6, 1, nc_double), SND_INLINE(2, 3), true);
+        ndarray_t *B =
+            nc_reshape(nc_arange(0, 3, 1, nc_double), SND_INLINE(1, 3), true);
+        ndarray_t *C = nc_add(A, B);  // A broadcasts to B's shape
+
+        // Let's see what we made!
+        nc_display(A, true);
+        nc_display(B, true);
+        nc_display(C, true);
+
+        nc_free(&A);
+        nc_free(&B);
+        nc_free(&C);
+    }
+
     /* FOR SINGLE DIMENSION */
     {
         // ndarray_t *a =

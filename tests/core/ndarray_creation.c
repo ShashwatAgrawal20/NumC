@@ -1,8 +1,8 @@
 #include <numc/numc.h>
 
-#include "../tec.h"
+#include "../../tec.h"
 
-TEC(test_arange_int) {
+TEC(creation, test_arange_int) {
     ndarray_t *arr = nc_arange(0, 5, 1, nc_int);
 
     TEC_ASSERT(arr != NULL);
@@ -16,10 +16,10 @@ TEC(test_arange_int) {
     }
 
     nc_free(&arr);
-    TEC_ASSERT(arr == NULL);
+    TEC_ASSERT_NULL(arr);
 }
 
-TEC(test_arange_float) {
+TEC(creation, test_arange_float) {
     ndarray_t *arr = nc_arange(0.0, 5.0, 0.5, nc_float);
 
     TEC_ASSERT(arr != NULL);
@@ -35,7 +35,7 @@ TEC(test_arange_float) {
     nc_free(&arr);
 }
 
-TEC(test_arange_double) {
+TEC(creation, test_arange_double) {
     ndarray_t *arr = nc_arange(1.0, 4.0, 0.1, nc_double);
 
     TEC_ASSERT(arr != NULL);
@@ -49,7 +49,7 @@ TEC(test_arange_double) {
     nc_free(&arr);
 }
 
-TEC(test_arange_large_step) {
+TEC(creation, test_arange_large_step) {
     ndarray_t *arr = nc_arange(0, 7000, 69, nc_int);
 
     TEC_ASSERT(arr != NULL);
@@ -63,7 +63,7 @@ TEC(test_arange_large_step) {
     nc_free(&arr);
 }
 
-TEC(test_arange_negative_range) {
+TEC(creation, test_arange_negative_range) {
     ndarray_t *arr = nc_arange(-5, 5, 1, nc_int);
 
     TEC_ASSERT(arr != NULL);
@@ -77,7 +77,7 @@ TEC(test_arange_negative_range) {
     nc_free(&arr);
 }
 
-TEC(test_create_multidimensional) {
+TEC(creation, test_create_multidimensional) {
     size_t shape[] = {2, 3, 4};
     ndarray_t *arr = nc_create(shape, 3, nc_int);
 
@@ -91,7 +91,7 @@ TEC(test_create_multidimensional) {
     nc_free(&arr);
 }
 
-TEC(test_create_large_array) {
+TEC(creation, test_create_large_array) {
     size_t shape[] = {10, 1920, 1080};
     ndarray_t *arr = nc_create(shape, 3, nc_int);
 
@@ -102,14 +102,12 @@ TEC(test_create_large_array) {
     nc_free(&arr);
 }
 
-TEC(test_arange_edge_cases) {
-    // Empty range
+TEC(creation, test_arange_edge_cases) {
     ndarray_t *empty = nc_arange(5, 5, 1, nc_int);
     TEC_ASSERT(empty != NULL);
     TEC_ASSERT_EQ(empty->total_size, (size_t)0);
     nc_free(&empty);
 
-    // Single element
     ndarray_t *single = nc_arange(0, 1, 1, nc_int);
     TEC_ASSERT(single != NULL);
     TEC_ASSERT_EQ(single->total_size, (size_t)1);

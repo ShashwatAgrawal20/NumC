@@ -3,11 +3,11 @@
 #include <numc/pch.h>
 
 #include "numc/core/ndarray.h"
-#include "numc/internal/utils.h"
+#include "numc/internal/error_internal.h"
 
 bool nc_can_broadcast(const ndarray_t *a, const ndarray_t *b) {
     if (!a || !b) {
-        _ELOG("nc_broadcast error: one or both input arrays are NULL\n");
+        _nc_set_error(NC_ERR_NULL_INPUT);
         return false;
     }
 

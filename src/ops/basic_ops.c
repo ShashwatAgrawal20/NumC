@@ -2,24 +2,22 @@
 
 #include "numc/core/ndarray.h"
 #include "numc/internal/broadcast.h"
+#include "numc/internal/error_internal.h"
 #include "numc/internal/utils.h"
 
-static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b,
-                                           const char *op_name) {
+static inline bool _check_binary_op_compat(ndarray_t *a, ndarray_t *b) {
     if (!a || !b) {
-        _ELOG("%s error: one or both arrays are NULL\n", op_name);
+        _nc_set_error(NC_ERR_NULL_INPUT);
         return false;
     }
 
     if (!nc_can_broadcast(a, b)) {
-        _ELOG("%s error: dimension mismatch (%d vs %d)\n", op_name, a->ndim,
-              b->ndim);
+        _nc_set_error(NC_ERR_BROADCAST);
         return false;
     }
 
     if (a->dtype != b->dtype) {
-        _ELOG("%s error: dtype mismatch (%d vs %d)\n", op_name, a->dtype,
-              b->dtype);
+        _nc_set_error(NC_ERR_DTYPE_MISMATCH);
         return false;
     }
 
@@ -84,17 +82,16 @@ static inline size_t _broadcast_index(const size_t *result_indices,
         }                                                                     \
     } while (0)
 
-#define _CHECK_DIV_ZERO(a_idx, b_idx)                                    \
-    if (bd[b_idx] == 0) {                                                \
-        fprintf(stderr, "nc_div error: Division by zero at index %zu\n", \
-                b_idx);                                                  \
-        nc_free(&result);                                                \
-        return NULL;                                                     \
+#define _CHECK_DIV_ZERO(a_idx, b_idx)           \
+    if (bd[b_idx] == 0) {                       \
+        _nc_set_error(NC_ERR_DIVISION_BY_ZERO); \
+        nc_free(&result);                       \
+        return NULL;                            \
     }
 
 #define _NC_BINARY_OP_WRAPPER(operator, op_name, safe_op)                   \
     do {                                                                    \
-        if (!_check_binary_op_compat(a, b, op_name)) {                      \
+        if (!_check_binary_op_compat(a, b)) {                               \
             return NULL;                                                    \
         }                                                                   \
         int result_ndim = (a->ndim > b->ndim) ? a->ndim : b->ndim;          \

@@ -2,14 +2,15 @@
 #define UTILS_H
 
 #include "numc/core/ndarray.h"
+#include "numc/internal/error_internal.h"
 
 #define NC_USE_ARRAY_DTYPE ((dtype_t) - 1)
 #define _check_fail() goto defer
 
-#define _check_alloc(allocation)                                      \
-    if (allocation == NULL) {                                         \
-        fprintf(stderr, "malloc error: Memory allocation failed!\n"); \
-        goto defer;                                                   \
+#define _check_alloc(allocation)         \
+    if (allocation == NULL) {            \
+        _nc_set_error(NC_ERR_MEM_ALLOC); \
+        goto defer;                      \
     }
 
 #define _check_null_return(item) \
@@ -27,12 +28,12 @@
         fprintf(stderr, __VA_ARGS__); \
     } while (0)
 
-#define _GUARD(expr, ...)                 \
-    do {                                  \
-        if (expr) {                       \
-            fprintf(stderr, __VA_ARGS__); \
-            return NULL;                  \
-        }                                 \
+#define _GUARD(expr, error_code)       \
+    do {                               \
+        if (expr) {                    \
+            _nc_set_error(error_code); \
+            return NULL;               \
+        }                              \
     } while (0)
 
 #define DISPATCH_DTYPE_MACRO(MACRO, OPT_BODY, ...) \
@@ -65,7 +66,7 @@ static inline void _assign_value(void *ptr, double val, dtype_t dtype) {
             *(double *)ptr = val;
             break;
         default:
-            _ELOG("_assign_value error: invalid dtype (%d)\n", dtype);
+            _nc_set_error(NC_ERR_UNSUPPORTED_DTYPE);
     }
 }
 
@@ -78,7 +79,7 @@ static inline size_t _dtype_size(dtype_t dtype) {
         case nc_double:
             return sizeof(double);
         default:
-            _ELOG("_dtype_size error: invalid dtype (%d)\n", dtype);
+            _nc_set_error(NC_ERR_UNSUPPORTED_DTYPE);
             return 0;
     }
 }

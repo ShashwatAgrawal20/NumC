@@ -10,3 +10,4 @@ build
 build_objects
 test_runner
 main
+cmake_build

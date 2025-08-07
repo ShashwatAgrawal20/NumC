@@ -2,6 +2,7 @@
 #define NUMC_H
 
 #include <numc/core/core.h>
+#include <numc/core/error.h>
 #include <numc/ops/ops.h>
 #include <numc/utils/macros.h>
 

@@ -7,7 +7,7 @@
 #include "numc/utils/macros.h"
 
 ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
-    _GUARD((!array), "nc_sum error: invalid array input");
+    _GUARD((!array), NC_ERR_NULL_INPUT);
 
     nc_sum_otps local_opts = *opts;
     if (local_opts.dtype == NC_USE_ARRAY_DTYPE) {
@@ -21,8 +21,7 @@ ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
 
     _GUARD((local_opts.axis != -1 &&
             (effective_axis < 0 || effective_axis >= array->ndim)),
-           "nc_sum error: axis %d out of bounds for ndim %d\n", local_opts.axis,
-           array->ndim);
+           NC_ERR_OUT_OF_BOUNDS);
 
     if (local_opts.axis == -1) {
         double acc = 0.0;
@@ -42,7 +41,7 @@ ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
     } while (0)
 
         ndarray_t *result = nc_create(SND_INLINE(1), local_opts.dtype);
-        _GUARD(!result, "nc_sum error: cannot create output array\n");
+        _GUARD(!result, NC_ERR_MEM_ALLOC);
 
         DISPATCH_DTYPE_MACRO(INTERNAL_NC_SUM_ALL, NULL);
         _assign_value(result->data, acc, local_opts.dtype);
@@ -57,7 +56,7 @@ ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
         }
     }
     ndarray_t *result = nc_create(SND(new_shape), local_opts.dtype);
-    _GUARD(!result, "nc_sum error: cannot create output array\n");
+    _GUARD(!result, NC_ERR_MEM_ALLOC);
 
     size_t outer_dims_size = 1;
     size_t inner_dims_size = 1;

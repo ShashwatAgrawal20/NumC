@@ -2,6 +2,7 @@
 
 #include <numc/pch.h>
 
+#include "numc/internal/error_internal.h"
 #include "numc/internal/utils.h"
 
 /*******************************************************************************
@@ -59,7 +60,7 @@ static inline void _nc_print_recursive(ndarray_t *array, int dim, size_t offset,
 
 static inline void _nc_print_all(ndarray_t *array) {
     if (!array || !array->data) {
-        _ELOG("nc_display error: ");
+        _nc_set_error(NC_ERR_NULL_INPUT);
         return;
     }
 
@@ -88,8 +89,7 @@ static inline void _compute_total_size(ndarray_t *array) {
                                 PUBLIC FUNCTIONS
 *******************************************************************************/
 ndarray_t *nc_create(size_t *shape, int ndim, dtype_t dtype) {
-    _GUARD(ndim <= 0,
-           "nc_create error: can't initialize ndarray of dimention %d", ndim);
+    _GUARD(ndim <= 0, NC_ERR_INVALID_ARG);
     size_t dtype_size = _dtype_size(dtype);
     _check_zero(dtype_size);
 
@@ -141,15 +141,13 @@ void nc_free(ndarray_t **array) {
 
 void nc_set(ndarray_t *array, size_t *indices, void *value) {
     if (!array || !array->data) {
-        _ELOG("nc_set error: array doesn't exists\n");
+        _nc_set_error(NC_ERR_NULL_INPUT);
         return;
     }
     size_t offset = 0;
     for (int i = 0; i < array->ndim; ++i) {
         if (indices[i] >= array->shape[i]) {
-            _ELOG(
-                "nc_set error: index out of bounds: %zu (axis %d, shape %zu)\n",
-                indices[i], i, array->shape[i]);
+            _nc_set_error(NC_ERR_OUT_OF_BOUNDS);
             return;
         }
         offset += indices[i] * array->strides[i];
@@ -162,9 +160,7 @@ void *nc_get(ndarray_t *array, size_t *indices) {
     if (!array || !array->data) return NULL;
     size_t offset = 0;
     for (int i = 0; i < array->ndim; ++i) {
-        _GUARD(indices[i] >= array->shape[i],
-               "nc_get error: index out of bounds: %zu (axis %d, shape %zu)\n",
-               indices[i], i, array->shape[i]);
+        _GUARD(indices[i] >= array->shape[i], NC_ERR_OUT_OF_BOUNDS);
         offset += indices[i] * array->strides[i];
     }
 
@@ -172,7 +168,7 @@ void *nc_get(ndarray_t *array, size_t *indices) {
 }
 
 ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
-    _GUARD(step == 0.0, "nd_arange error: step cannot be zero.\n");
+    _GUARD(step == 0.0, NC_ERR_INVALID_ARG);
 
     size_t length = (size_t)((stop - start) / step);
     if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
@@ -203,7 +199,7 @@ ndarray_t *nc_arange(double start, double stop, double step, dtype_t dtype) {
 ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
                       bool is_inline) {
     if (!array || ndim <= 0) {
-        _ELOG("nc_reshape error: invalid input\n");
+        _nc_set_error(NC_ERR_NULL_INPUT);
         _check_fail();
     }
 
@@ -212,10 +208,7 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
         new_total *= shape[i];
     }
     if (new_total != array->total_size) {
-        _ELOG(
-            "nc_reshape error: shape mismatch (original total: %zu, new: "
-            "%zu)\n",
-            array->total_size, new_total);
+        _nc_set_error(NC_ERR_RESHAPE_MISMATCH);
         _check_fail();
     }
 
@@ -225,7 +218,7 @@ ndarray_t *nc_reshape(ndarray_t *array, size_t *shape, int ndim,
             size_t *new_strides =
                 realloc(array->strides, ndim * sizeof(size_t));
             if (!new_shape || !new_strides) {
-                _ELOG("nc_reshape error: realloc failed\n");
+                _nc_set_error(NC_ERR_MEM_ALLOC);
                 free(new_shape);
                 free(new_strides);
                 _check_fail();
@@ -259,7 +252,7 @@ defer:
 void nc_display(ndarray_t *array, bool print_data) {
     if (!array) {
         // printf("(null array)\");
-        _ELOG("nc_display error: (null array)\n");
+        _nc_set_error(NC_ERR_NULL_INPUT);
         return;
     }
     printf("ndarray_t:\n");

@@ -9,7 +9,7 @@ typedef struct {
     bool keepdims;
     int scalar;
     bool where;
-} nc_sum_otps;
+} nc_sum_opts;
 
 /*
  * WHAT IS NC_SUM_DEFAULT_OPTS?
@@ -58,7 +58,7 @@ typedef struct {
  * are required.
  */
 #define NC_SUM_DEFAULT_OPTS(...)      \
-    (&(nc_sum_otps){.axis = -1,       \
+    (&(nc_sum_opts){.axis = -1,       \
                     .dtype = -1,      \
                     .out = NULL,      \
                     .keepdims = true, \
@@ -69,90 +69,40 @@ typedef struct {
 /**
  * nc_sum
  * ======
- * Performs a summation (reduction) operation over one or more axes of a NumC
- * ndarray.
+ * Reduces a NumC ndarray by summing along a given axis or all axes.
  *
  * SYNOPSIS
- * --------
- *     ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts);
- *
- * DESCRIPTION
- * -----------
- * The `nc_sum` function reduces the input `array` by summing its elements
- * across the specified axis or axes. The behavior and output of the reduction
- * can be controlled through the `nc_sum_otps` options struct, allowing
- * fine-grained configuration including output data type, whether to retain
- * reduced dimensions, and whether to reduce conditionally.
+ * -------
+ *     ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_opts *opts);
  *
  * PARAMETERS
- * ----------
- * - `array` : `const ndarray_t *`
- *     A pointer to the input NumC ndarray to be reduced.
- *
- * - `opts` : `const nc_sum_otps *`
- *     A pointer to an options struct that controls reduction behavior. This can
- * be constructed using the `NC_SUM_DEFAULT_OPTS(...)` macro for convenience.
- *
- * OPTIONS STRUCTURE: `nc_sum_otps`
- * -------------------------------
- * - `axis` : `int`
- *     The axis along which to perform the summation. A value of `-1` means
- * reduce over all axes.
- *
- * - `dtype` : `dtype_t`
- *     Specifies the data type of the result. A value of `-1` indicates the type
- * should be inferred from the input array.
- *
- * - `out` : `ndarray_t *`
- *     Optional pre-allocated output array. If NULL, a new array is allocated
- * and returned.
- *
- * - `keepdims` : `bool`
- *     If `true`, retains reduced axes as dimensions of size 1, preserving the
- * input shape's rank.
- *
- * - `scalar` : `int`
- *     Reserved for scalar reduction logic. Not currently used.
- *
- * - `where` : `bool`
- *     If `true`, a masking mechanism is applied to select which elements are
- * included in the reduction. (Implementation dependent or reserved for future
- * support.)
+ * ---------
+ * - `array` : input array to reduce.
+ * - `opts`  : reduction options (see `nc_sum_opts`).
  *
  * RETURNS
  * -------
- * - Returns a newly allocated `ndarray_t *` containing the result of the
- * reduction unless an output array was provided via `opts->out`, in which case
- * that array is returned.
- * - Returns `NULL` if the operation fails (e.g., due to incompatible shapes or
- * memory issues).
+ * - New array with the reduction result, or `opts->out` if supported.
+ * - NULL on failure.
  *
- * EXAMPLES
- * --------
- * Reduce across all axes:
- *     ndarray_t *sum = nc_sum(array, NC_SUM_DEFAULT_OPTS());
+ * CURRENT SUPPORT
+ * ---------------
+ * Implemented:
+ *    - axis  (incl. negative indexing, but -1 will give you issues
+ *      because it's used for "reduce over all axes")
  *
- * Reduce along axis 0 and retain dimensions:
- *     ndarray_t *sum = nc_sum(array, NC_SUM_DEFAULT_OPTS(.axis = 0, .keepdims =
- * true));
+ *   - dtype (only NC_USE_ARRAY_DTYPE case)
  *
- * Reduce to pre-allocated output array:
- *     ndarray_t *sum = nc_sum(array, NC_SUM_DEFAULT_OPTS(.axis = 1, .out =
- * prealloc));
+ * Ignored:
+ *   - out
+ *   - keepdims
+ *   - scalar
+ *   - where
  *
  * NOTES
  * -----
- * - This function assumes valid and well-formed inputs; no internal validation
- * is guaranteed.
- * - Returned arrays must be manually freed unless passed in via `opts->out`.
- * - Behavior with `scalar` and `where` fields may be subject to future
- * expansion.
- *
- * SEE ALSO
- * --------
- * - `NC_SUM_DEFAULT_OPTS` macro for convenient default options.
- * - `ndarray_t` struct definition and utility functions.
+ * Behavior may expand in future; see `NC_SUM_DEFAULT_OPTS` for defaults.
  */
-ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts);
+ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_opts *opts);
 
 #endif  // !REDUCTION_OPS_H

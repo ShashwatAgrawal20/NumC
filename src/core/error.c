@@ -14,7 +14,6 @@ void _nc_set_error(nc_error_t err) { g_last_error = err; }
 
 nc_error_t nc_get_last_error(void) { return g_last_error; }
 
-// THIS IS THE CORRECTED, COMPLETE FUNCTION
 const char* nc_strerror(nc_error_t err) {
     switch (err) {
         case NC_SUCCESS:

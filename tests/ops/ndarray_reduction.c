@@ -7,7 +7,7 @@ TEC(reduction, test_sum_with_axis) {
         nc_reshape(nc_arange(1, 9, 1, nc_int), SND_INLINE(2, 2, 2), true);
 
     // Test sum along axis 2
-    nc_sum_otps *opts = NC_SUM_DEFAULT_OPTS();
+    nc_sum_opts *opts = NC_SUM_DEFAULT_OPTS();
     opts->axis = 2;
     ndarray_t *sum_axis2 = nc_sum(test, opts);
 

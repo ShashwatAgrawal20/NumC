@@ -6,10 +6,10 @@
 #include "numc/internal/utils.h"
 #include "numc/utils/macros.h"
 
-ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_otps *opts) {
+ndarray_t *nc_sum(const ndarray_t *array, const nc_sum_opts *opts) {
     _GUARD((!array), NC_ERR_NULL_INPUT);
 
-    nc_sum_otps local_opts = *opts;
+    nc_sum_opts local_opts = *opts;
     if (local_opts.dtype == NC_USE_ARRAY_DTYPE) {
         local_opts.dtype = array->dtype;
     }

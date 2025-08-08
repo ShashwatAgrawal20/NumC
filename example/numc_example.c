@@ -1,7 +1,8 @@
 #include "numc/internal/broadcast.h"
 #define NC_D_ORIW
-#include <numc/numc.h>
 #include <numc/pch.h>
+
+#include "numc/numc.h"
 
 int main(void) {
     printf("NumC: A NumPy-like numerical computing library in C.\n");
@@ -149,7 +150,7 @@ int main(void) {
             nc_reshape(nc_arange(1, 9, 1, nc_int), SND_INLINE(2, 2, 2), true);
 
         /* EXPLICIT SHIT */
-        nc_sum_otps *opts = NC_SUM_DEFAULT_OPTS();
+        nc_sum_opts *opts = NC_SUM_DEFAULT_OPTS();
         opts->axis = 2;
         ndarray_t *sa_explicit = nc_sum(test, opts);
 
